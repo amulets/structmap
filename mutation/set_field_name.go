@@ -1,4 +1,4 @@
-package mutations
+package mutation
 
 import "github.com/dungeon-code/structmap"
 

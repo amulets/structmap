@@ -6,7 +6,7 @@ import (
 	"testing"
 
 	"github.com/dungeon-code/structmap"
-	"github.com/dungeon-code/structmap/mutations"
+	"github.com/dungeon-code/structmap/mutation"
 )
 
 type SubSubStruct struct {
@@ -50,7 +50,7 @@ func TestDecode(t *testing.T) {
 	}
 
 	d := structmap.NewDecoder()
-	d.AddMutation(mutations.SetFieldName("structmap"))
+	d.AddMutation(mutation.SetFieldName("structmap"))
 	d.AddMutation(intToString)
 
 	if err := d.Decode(m, s); err != nil {
