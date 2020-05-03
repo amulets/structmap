@@ -2,20 +2,21 @@ package structmap_test
 
 import (
 	"reflect"
-	"strconv"
 	"testing"
 
 	"github.com/dungeon-code/structmap"
 	"github.com/dungeon-code/structmap/mutation"
+	"github.com/dungeon-code/structmap/mutation/cast"
 )
 
 type SubSubStruct struct {
 	Address string
+	Number  *int
 }
 
 type SubStruct struct {
 	*SubSubStruct
-	Age string
+	Age *string `default:"15"`
 }
 
 type MyStruct struct {
@@ -26,32 +27,32 @@ type MyStruct struct {
 	UserNames []string
 }
 
-func intToString(field *structmap.FieldPart) error {
-	fieldValue := reflect.ValueOf(field.Value)
-
-	if field.Type.Kind() == reflect.String && fieldValue.Kind() == reflect.Int {
-		field.Value = strconv.Itoa(field.Value.(int))
-	}
-
-	return nil
-}
-
 func TestDecode(t *testing.T) {
 	s := &MyStruct{}
 	m := map[string]interface{}{
 		"name":      "Marisa",
 		"user":      "{{name}}",
 		"UserNames": []string{"A", "B", "C"},
-		"Age":       18,
-		"Address":   "Street A",
+		// "Age":       18,
+		"Address": "Street A",
+		"Number":  "1832",
 		"myAddress": map[string]interface{}{
 			"Address": "Street B",
+			"Number":  1345,
 		},
 	}
 
 	d := structmap.NewDecoder()
 	d.AddMutation(mutation.SetFieldName("structmap"))
-	d.AddMutation(intToString)
+	d.AddMutation(func(field *structmap.FieldPart) error {
+		name, _ := structmap.ParseTag(field.Tag.Get("default"))
+		if field.Value == nil && name != "" {
+			field.Value = name
+		}
+
+		return nil
+	})
+	d.AddMutation(cast.ToType)
 
 	if err := d.Decode(m, s); err != nil {
 		t.Error(err)
@@ -59,16 +60,21 @@ func TestDecode(t *testing.T) {
 
 	// &{SubStruct:{SubSubStruct:0xc000010240 Age:18} MyAddress:{Address:Street B} Name:0xc0000102a0 Username:{{name}} UserNames:[A B C]}
 	name := "Marisa"
+	age := "15"
+	n1 := 1832
+	n2 := 1345
 
 	expected := &MyStruct{
 		SubStruct: SubStruct{
 			SubSubStruct: &SubSubStruct{
 				Address: "Street A",
+				Number:  &n1,
 			},
-			Age: "18",
+			Age: &age,
 		},
 		MyAddress: SubSubStruct{
 			Address: "Street B",
+			Number:  &n2,
 		},
 		Name:      &name,
 		Username:  "{{name}}",
