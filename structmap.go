@@ -104,14 +104,14 @@ func (decoder *Decoder) Decode(from map[string]interface{}, to interface{}) (err
 		} else {
 			value := reflect.ValueOf(fp.Value)
 
-			if field.Value.Kind() == reflect.Ptr {
+			if field.Value.Kind() == reflect.Ptr && value.Kind() != reflect.Ptr {
 				ptrValue := reflect.New(value.Type())
 				ptrValue.Elem().Set(value)
 
-				field.Value.Set(ptrValue)
-			} else {
-				field.Value.Set(value)
+				value = ptrValue
 			}
+
+			field.Value.Set(value)
 		}
 	}
 
