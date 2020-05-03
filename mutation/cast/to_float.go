@@ -8,24 +8,24 @@ import (
 	"github.com/dungeon-code/structmap"
 )
 
-func toInt(field *structmap.FieldPart) error {
+func toFloat(field *structmap.FieldPart) error {
 	fieldValue := reflect.Indirect(reflect.ValueOf(field.Value))
 	if fieldValue.Kind() == reflect.Invalid {
 		return nil
 	}
 
 	switch toKind(fieldValue.Type()) {
-	case reflect.Int:
-		// Ignore is a int type
-	case reflect.Uint:
-		field.Value = int64(fieldValue.Uint())
 	case reflect.Float32:
-		field.Value = int64(fieldValue.Float())
+		// Ignore is a float type
+	case reflect.Int:
+		field.Value = float64(fieldValue.Int())
+	case reflect.Uint:
+		field.Value = float64(fieldValue.Uint())
 	case reflect.Bool:
 		if fieldValue.Bool() {
-			field.Value = 1
+			field.Value = float32(1)
 		} else {
-			field.Value = 0
+			field.Value = float32(0)
 		}
 	case reflect.String:
 		fieldType := field.Type
@@ -34,11 +34,11 @@ func toInt(field *structmap.FieldPart) error {
 			fieldType = fieldType.Elem()
 		}
 
-		i, err := strconv.ParseInt(fieldValue.String(), 0, fieldType.Bits())
+		f, err := strconv.ParseFloat(fieldValue.String(), fieldType.Bits())
 		if err == nil {
-			field.Value = i
+			field.Value = f
 		} else {
-			return fmt.Errorf("cannot parse '%s' as int: %s", field.Name, err)
+			return fmt.Errorf("cannot parse '%s' as float: %s", field.Name, err)
 		}
 	default:
 		return fmt.Errorf("'%s' expected type '%s', got non-convertible type '%s'", field.Name, field.Type, fieldValue.Type())

@@ -8,24 +8,34 @@ import (
 	"github.com/dungeon-code/structmap"
 )
 
-func toInt(field *structmap.FieldPart) error {
+func toUint(field *structmap.FieldPart) error {
 	fieldValue := reflect.Indirect(reflect.ValueOf(field.Value))
 	if fieldValue.Kind() == reflect.Invalid {
 		return nil
 	}
 
 	switch toKind(fieldValue.Type()) {
-	case reflect.Int:
-		// Ignore is a int type
 	case reflect.Uint:
-		field.Value = int64(fieldValue.Uint())
+		// Ignore is a uint type
+	case reflect.Int:
+		i := fieldValue.Int()
+		if i < 0 {
+			return fmt.Errorf("cannot parse '%s', %d overflows uint", field.Name, i)
+		}
+
+		field.Value = uint64(i)
 	case reflect.Float32:
-		field.Value = int64(fieldValue.Float())
+		f := fieldValue.Float()
+		if f < 0 {
+			return fmt.Errorf("cannot parse '%s', %f overflows uint", field.Name, f)
+		}
+
+		field.Value = uint64(f)
 	case reflect.Bool:
 		if fieldValue.Bool() {
-			field.Value = 1
+			field.Value = uint(1)
 		} else {
-			field.Value = 0
+			field.Value = uint(0)
 		}
 	case reflect.String:
 		fieldType := field.Type
@@ -34,12 +44,12 @@ func toInt(field *structmap.FieldPart) error {
 			fieldType = fieldType.Elem()
 		}
 
-		i, err := strconv.ParseInt(fieldValue.String(), 0, fieldType.Bits())
-		if err == nil {
-			field.Value = i
-		} else {
-			return fmt.Errorf("cannot parse '%s' as int: %s", field.Name, err)
+		i, err := strconv.ParseUint(fieldValue.String(), 0, fieldType.Bits())
+		if err != nil {
+			return fmt.Errorf("cannot parse '%s' as uint: %s", field.Name, err)
 		}
+
+		field.Value = i
 	default:
 		return fmt.Errorf("'%s' expected type '%s', got non-convertible type '%s'", field.Name, field.Type, fieldValue.Type())
 	}

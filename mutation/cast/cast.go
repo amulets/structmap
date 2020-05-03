@@ -8,8 +8,11 @@ import (
 
 // Covered types to convert
 var convert = map[reflect.Kind]func(*structmap.FieldPart) error{
-	reflect.String: toString,
-	reflect.Int:    toInt,
+	reflect.String:  toString,
+	reflect.Int:     toInt,
+	reflect.Uint:    toUint,
+	reflect.Bool:    toBool,
+	reflect.Float32: toFloat,
 }
 
 // ToType cast value to field type value

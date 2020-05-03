@@ -25,6 +25,9 @@ type MyStruct struct {
 	Name      *string      `structmap:"name,omitempty"`
 	Username  string       `structmap:"user"`
 	UserNames []string
+	MyBool    bool
+	MyUint    uint32
+	MyFloat   float32
 }
 
 func TestDecode(t *testing.T) {
@@ -40,6 +43,9 @@ func TestDecode(t *testing.T) {
 			"Address": "Street B",
 			"Number":  1345,
 		},
+		"MyBool":  1,
+		"MyUint":  true,
+		"MyFloat": false,
 	}
 
 	d := structmap.NewDecoder()
@@ -79,6 +85,9 @@ func TestDecode(t *testing.T) {
 		Name:      &name,
 		Username:  "{{name}}",
 		UserNames: []string{"A", "B", "C"},
+		MyBool:    true,
+		MyUint:    1,
+		MyFloat:   0,
 	}
 
 	if !reflect.DeepEqual(s, expected) {
