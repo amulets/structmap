@@ -69,8 +69,6 @@ func (decoder *Decoder) Decode(from map[string]interface{}, to interface{}) (err
 
 				if value, ok := from[fp.Name]; ok {
 					fp.Value = value
-				} else {
-					fp.Value = reflect.Zero(field.Type).Interface()
 				}
 			}
 		}
@@ -94,7 +92,7 @@ func (decoder *Decoder) Decode(from map[string]interface{}, to interface{}) (err
 			if !field.IsEmbedded() {
 				var ok bool
 				if structFrom, ok = fp.Value.(map[string]interface{}); !ok {
-					return fmt.Errorf("Field %s cannot is a embedded struct, will expect that's value is a map[string]interface{}", fp.Name)
+					return fmt.Errorf("field %s cannot is a embedded struct, will expect that's value is a map[string]interface{}", fp.Name)
 				}
 			}
 
@@ -103,15 +101,40 @@ func (decoder *Decoder) Decode(from map[string]interface{}, to interface{}) (err
 			}
 		} else {
 			value := reflect.ValueOf(fp.Value)
+			fieldValue := field.Value
 
-			if field.Value.Kind() == reflect.Ptr && value.Kind() != reflect.Ptr {
-				ptrValue := reflect.New(value.Type())
-				ptrValue.Elem().Set(value)
-
-				value = ptrValue
+			// Get value element
+			if value.Kind() == reflect.Ptr {
+				value = value.Elem()
 			}
 
-			field.Value.Set(value)
+			// Ignore if no have a value
+			if value.Kind() == reflect.Invalid {
+				continue
+			}
+
+			// Get field value element
+			if fieldValue.Kind() == reflect.Ptr {
+				if fieldValue.IsZero() {
+					fieldValue.Set(reflect.New(fieldValue.Type().Elem()))
+				}
+
+				fieldValue = fieldValue.Elem()
+			}
+
+			if value.Type().ConvertibleTo(fieldValue.Type()) {
+				value = value.Convert(fieldValue.Type())
+			}
+
+			if value.Kind() != fieldValue.Kind() {
+				return fmt.Errorf("field %s value of type %s is not assignable to type %s", field.Name, value.Type(), fieldValue.Type())
+			}
+
+			if field.Value.Kind() == reflect.Ptr {
+				field.Value.Elem().Set(value)
+			} else {
+				field.Value.Set(value)
+			}
 		}
 	}
 
