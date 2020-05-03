@@ -28,6 +28,7 @@ type MyStruct struct {
 	MyBool    bool
 	MyUint    uint32
 	MyFloat   float32
+	MyMap     map[string]interface{}
 }
 
 func TestDecode(t *testing.T) {
@@ -46,9 +47,12 @@ func TestDecode(t *testing.T) {
 		"MyBool":  1,
 		"MyUint":  true,
 		"MyFloat": false,
+		"MyMap": map[string]interface{}{
+			"key": "value",
+		},
 	}
 
-	d := structmap.NewDecoder()
+	d := structmap.New()
 	d.AddMutation(mutation.SetFieldName("structmap"))
 	d.AddMutation(func(field *structmap.FieldPart) error {
 		name, _ := structmap.ParseTag(field.Tag.Get("default"))
@@ -88,6 +92,9 @@ func TestDecode(t *testing.T) {
 		MyBool:    true,
 		MyUint:    1,
 		MyFloat:   0,
+		MyMap: map[string]interface{}{
+			"key": "value",
+		},
 	}
 
 	if !reflect.DeepEqual(s, expected) {

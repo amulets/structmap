@@ -18,24 +18,24 @@ type (
 	// MutationFunc that's change field information
 	MutationFunc func(*FieldPart) error
 
-	// Decoder is a structmap
-	Decoder struct {
+	// StructMap is a structmap
+	StructMap struct {
 		mutations []MutationFunc
 	}
 )
 
-// NewDecoder instance of Decoder
-func NewDecoder() *Decoder {
-	return &Decoder{}
+// New instance of StructMap
+func New() *StructMap {
+	return &StructMap{}
 }
 
 // AddMutation a new mutation logic
-func (decoder *Decoder) AddMutation(mutation MutationFunc) {
+func (decoder *StructMap) AddMutation(mutation MutationFunc) {
 	decoder.mutations = append(decoder.mutations, mutation)
 }
 
 // Decode map to struct
-func (decoder *Decoder) Decode(from map[string]interface{}, to interface{}) (err error) {
+func (decoder *StructMap) Decode(from map[string]interface{}, to interface{}) (err error) {
 	defer func() {
 		if err == nil {
 			if recovered := recover(); recovered != nil {
