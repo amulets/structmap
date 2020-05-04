@@ -13,6 +13,7 @@ var convert = map[reflect.Kind]func(*structmap.FieldPart) error{
 	reflect.Uint:    toUint,
 	reflect.Bool:    toBool,
 	reflect.Float32: toFloat,
+	reflect.Map:     toMap,
 }
 
 // ToType cast value to field type value

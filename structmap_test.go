@@ -29,6 +29,7 @@ type MyStruct struct {
 	MyUint    uint32
 	MyFloat   float32
 	MyMap     map[string]interface{}
+	Headers   map[string]string `structmap:"headers"`
 }
 
 func TestDecode(t *testing.T) {
@@ -49,6 +50,10 @@ func TestDecode(t *testing.T) {
 		"MyFloat": false,
 		"MyMap": map[string]interface{}{
 			"key": "value",
+		},
+		"headers": map[string]interface{}{
+			"a": "b",
+			"b": "c",
 		},
 	}
 
@@ -94,6 +99,10 @@ func TestDecode(t *testing.T) {
 		MyFloat:   0,
 		MyMap: map[string]interface{}{
 			"key": "value",
+		},
+		Headers: map[string]string{
+			"a": "b",
+			"b": "c",
 		},
 	}
 
