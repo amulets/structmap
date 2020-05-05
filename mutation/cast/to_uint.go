@@ -4,55 +4,49 @@ import (
 	"fmt"
 	"reflect"
 	"strconv"
-
-	"github.com/dungeon-code/structmap"
 )
 
-func toUint(field *structmap.FieldPart) error {
-	fieldValue := reflect.Indirect(reflect.ValueOf(field.Value))
-	if fieldValue.Kind() == reflect.Invalid {
-		return nil
-	}
-
-	switch toKind(fieldValue.Type()) {
+func toUint(source reflect.Type, value reflect.Value) (result interface{}, err error) {
+	switch toKind(value.Type()) {
 	case reflect.Uint:
 		// Ignore is a uint type
 	case reflect.Int:
-		i := fieldValue.Int()
+		i := value.Int()
 		if i < 0 {
-			return fmt.Errorf("cannot parse '%s', %d overflows uint", field.Name, i)
+			err = fmt.Errorf("cannot parse, %d overflows uint", i)
+			return
 		}
 
-		field.Value = uint64(i)
+		result = uint64(i)
 	case reflect.Float32:
-		f := fieldValue.Float()
+		f := value.Float()
 		if f < 0 {
-			return fmt.Errorf("cannot parse '%s', %f overflows uint", field.Name, f)
+			err = fmt.Errorf("cannot parse, %f overflows uint", f)
+			return
 		}
 
-		field.Value = uint64(f)
+		result = uint64(f)
 	case reflect.Bool:
-		if fieldValue.Bool() {
-			field.Value = uint(1)
+		if value.Bool() {
+			result = uint(1)
 		} else {
-			field.Value = uint(0)
+			result = uint(0)
 		}
 	case reflect.String:
-		fieldType := field.Type
+		sourceType := source
 
-		if fieldType.Kind() == reflect.Ptr {
-			fieldType = fieldType.Elem()
+		if source.Kind() == reflect.Ptr {
+			sourceType = source.Elem()
 		}
 
-		i, err := strconv.ParseUint(fieldValue.String(), 0, fieldType.Bits())
-		if err != nil {
-			return fmt.Errorf("cannot parse '%s' as uint: %s", field.Name, err)
+		if i, err := strconv.ParseUint(value.String(), 0, sourceType.Bits()); err != nil {
+			err = fmt.Errorf("cannot parse to uint: %s", err)
+		} else {
+			result = i
 		}
-
-		field.Value = i
 	default:
-		return fmt.Errorf("'%s' expected type '%s', got non-convertible type '%s'", field.Name, field.Type, fieldValue.Type())
+		err = errNoConvertible
 	}
 
-	return nil
+	return
 }

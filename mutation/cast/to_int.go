@@ -4,45 +4,38 @@ import (
 	"fmt"
 	"reflect"
 	"strconv"
-
-	"github.com/dungeon-code/structmap"
 )
 
-func toInt(field *structmap.FieldPart) error {
-	fieldValue := reflect.Indirect(reflect.ValueOf(field.Value))
-	if fieldValue.Kind() == reflect.Invalid {
-		return nil
-	}
-
-	switch toKind(fieldValue.Type()) {
+func toInt(source reflect.Type, value reflect.Value) (result interface{}, err error) {
+	switch toKind(value.Type()) {
 	case reflect.Int:
 		// Ignore is a int type
 	case reflect.Uint:
-		field.Value = int64(fieldValue.Uint())
+		result = int64(value.Uint())
 	case reflect.Float32:
-		field.Value = int64(fieldValue.Float())
+		result = int64(value.Float())
 	case reflect.Bool:
-		if fieldValue.Bool() {
-			field.Value = 1
+		if value.Bool() {
+			result = 1
 		} else {
-			field.Value = 0
+			result = 0
 		}
 	case reflect.String:
-		fieldType := field.Type
+		sourceType := source
 
-		if fieldType.Kind() == reflect.Ptr {
-			fieldType = fieldType.Elem()
+		if source.Kind() == reflect.Ptr {
+			sourceType = source.Elem()
 		}
 
-		i, err := strconv.ParseInt(fieldValue.String(), 0, fieldType.Bits())
+		i, err := strconv.ParseInt(value.String(), 0, sourceType.Bits())
 		if err == nil {
-			field.Value = i
+			result = i
 		} else {
-			return fmt.Errorf("cannot parse '%s' as int: %s", field.Name, err)
+			err = fmt.Errorf("cannot parse to int: %s", err)
 		}
 	default:
-		return fmt.Errorf("'%s' expected type '%s', got non-convertible type '%s'", field.Name, field.Type, fieldValue.Type())
+		err = errNoConvertible
 	}
 
-	return nil
+	return
 }

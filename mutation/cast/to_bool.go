@@ -4,37 +4,30 @@ import (
 	"fmt"
 	"reflect"
 	"strconv"
-
-	"github.com/dungeon-code/structmap"
 )
 
-func toBool(field *structmap.FieldPart) error {
-	fieldValue := reflect.Indirect(reflect.ValueOf(field.Value))
-	if fieldValue.Kind() == reflect.Invalid {
-		return nil
-	}
-
-	switch toKind(fieldValue.Type()) {
+func toBool(source reflect.Type, value reflect.Value) (result interface{}, err error) {
+	switch toKind(value.Type()) {
 	case reflect.Bool:
 		// Ignore is a bool type
 	case reflect.Int:
-		field.Value = fieldValue.Int() != 0
+		result = value.Int() != 0
 	case reflect.Uint:
-		field.Value = fieldValue.Uint() != 0
+		result = value.Uint() != 0
 	case reflect.Float32:
-		field.Value = fieldValue.Float() != 0
+		result = value.Float() != 0
 	case reflect.String:
-		b, err := strconv.ParseBool(fieldValue.String())
+		b, err := strconv.ParseBool(value.String())
 		if err == nil {
-			field.Value = b
-		} else if fieldValue.String() == "" {
-			field.Value = false
+			result = b
+		} else if value.String() == "" {
+			result = false
 		} else {
-			return fmt.Errorf("cannot parse '%s' as bool: %s", field.Name, err)
+			err = fmt.Errorf("cannot parse to bool: %s", err)
 		}
 	default:
-		return fmt.Errorf("'%s' expected type '%s', got non-convertible type '%s'", field.Name, field.Type, fieldValue.Type())
+		err = errNoConvertible
 	}
 
-	return nil
+	return
 }
