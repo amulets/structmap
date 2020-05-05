@@ -12,7 +12,7 @@ func NewStruct(s interface{}) (*Struct, error) {
 	value := reflect.ValueOf(s)
 
 	// if pointer get element
-	for value.Kind() == reflect.Ptr {
+	if value.Kind() == reflect.Ptr {
 		value = value.Elem()
 	}
 

@@ -49,8 +49,14 @@ func (decoder *StructMap) Decode(from map[string]interface{}, to interface{}) (e
 		return err
 	}
 
+	// Struct is configurable?
+	if !s.CanSet() {
+		return ErrNotIsToPointer
+	}
+
 	for _, field := range s.Fields() {
 		fp := &FieldPart{
+			Name: field.Name,
 			Tag:  field.Tag,
 			Type: field.Type,
 		}
@@ -63,10 +69,6 @@ func (decoder *StructMap) Decode(from map[string]interface{}, to interface{}) (e
 
 			// expects there first mutation get field name to get field value
 			if i == 0 {
-				if fp.Name == "" {
-					fp.Name = field.Name
-				}
-
 				if value, ok := from[fp.Name]; ok {
 					fp.Value = value
 				}
