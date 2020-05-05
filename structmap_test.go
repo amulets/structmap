@@ -6,8 +6,8 @@ import (
 	"testing"
 
 	"github.com/dungeon-code/structmap"
-	"github.com/dungeon-code/structmap/mutation"
 	"github.com/dungeon-code/structmap/mutation/cast"
+	"github.com/dungeon-code/structmap/mutation/name"
 )
 
 type SubSubStruct struct {
@@ -61,11 +61,11 @@ func TestDecode(t *testing.T) {
 	defaultTag := "structmap"
 
 	d := structmap.New()
-	d.AddMutation(mutation.SetFieldName(defaultTag))
+	d.AddMutation(name.FromTag(defaultTag))
 	d.AddMutation(func(field *structmap.FieldPart) error {
-		name, _ := structmap.ParseTag(field.Tag.Get("default"))
-		if field.Value == nil && name != "" {
-			field.Value = name
+		value, _ := structmap.ParseTag(field.Tag.Get("default"))
+		if field.Value == nil && value != "" {
+			field.Value = value
 		}
 
 		return nil
@@ -168,7 +168,7 @@ func TestDefaultTypes(t *testing.T) {
 	var result DefaultTypes
 
 	sm := structmap.New()
-	sm.AddMutation(mutation.SetFieldName("structmap"))
+	sm.AddMutation(name.FromTag("structmap"))
 
 	err := sm.Decode(input, &result)
 	if err != nil {
@@ -233,7 +233,7 @@ func TestFromDefaultTypesToPointer(t *testing.T) {
 	var result DefaultTypesPointer
 
 	sm := structmap.New()
-	sm.AddMutation(mutation.SetFieldName("structmap"))
+	sm.AddMutation(name.FromTag("structmap"))
 
 	err := sm.Decode(input, &result)
 	if err != nil {
@@ -302,7 +302,7 @@ func TestFromPointerToDefaultTypes(t *testing.T) {
 	var result DefaultTypes
 
 	sm := structmap.New()
-	sm.AddMutation(mutation.SetFieldName("structmap"))
+	sm.AddMutation(name.FromTag("structmap"))
 
 	err := sm.Decode(input, &result)
 	if err != nil {
@@ -375,7 +375,7 @@ func TestFromPointerToPointer(t *testing.T) {
 	var result DefaultTypesPointer
 
 	sm := structmap.New()
-	sm.AddMutation(mutation.SetFieldName("structmap"))
+	sm.AddMutation(name.FromTag("structmap"))
 
 	err := sm.Decode(input, &result)
 	if err != nil {
@@ -431,8 +431,55 @@ func TestMapCast(t *testing.T) {
 	}
 
 	sm := structmap.New()
-	sm.AddMutation(mutation.SetFieldName("structmap"))
+	sm.AddMutation(name.FromTag("structmap"))
 	sm.AddMutation(cast.ToType)
+
+	err := sm.Decode(m, s)
+	if err != nil {
+		t.Error(err)
+	}
+
+	t.Logf("%+v", s)
+}
+
+// TODO: Remove this test (tmp)
+func TestName(t *testing.T) {
+	s := &struct {
+		FirstName string `bson:"first_name"`
+		LastName  string `json:"last_name"`
+		SnakeCase string
+	}{}
+
+	m := map[string]interface{}{
+		"first_name": "MyFirstName",
+		"last_name":  "MyLastName",
+		"snake_case": "MySnakeCase",
+	}
+
+	sm := structmap.New()
+	sm.AddMutation(name.Discovery(name.FromTag("json"), name.FromTag("bson"), name.FromSnake))
+
+	err := sm.Decode(m, s)
+	if err != nil {
+		t.Error(err)
+	}
+
+	t.Logf("%+v", s)
+}
+
+func TestNameNoop(t *testing.T) {
+	s := &struct {
+		ValueA string
+		ValueB string
+	}{}
+
+	m := map[string]interface{}{
+		"ValueA": "valA",
+		"ValueB": "valB",
+	}
+
+	sm := structmap.New()
+	sm.AddMutation(name.Noop)
 
 	err := sm.Decode(m, s)
 	if err != nil {
