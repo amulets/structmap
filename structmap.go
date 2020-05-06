@@ -30,12 +30,12 @@ func New() *StructMap {
 }
 
 // AddMutation a new mutation logic
-func (decoder *StructMap) AddMutation(mutation MutationFunc) {
-	decoder.mutations = append(decoder.mutations, mutation)
+func (sm *StructMap) AddMutation(mutation MutationFunc) {
+	sm.mutations = append(sm.mutations, mutation)
 }
 
 // Decode map to struct
-func (decoder *StructMap) Decode(from map[string]interface{}, to interface{}) (err error) {
+func (sm *StructMap) Decode(from map[string]interface{}, to interface{}) (err error) {
 	defer func() {
 		if err == nil {
 			if recovered := recover(); recovered != nil {
@@ -62,7 +62,7 @@ func (decoder *StructMap) Decode(from map[string]interface{}, to interface{}) (e
 		}
 
 		// run mutations
-		for i, mutation := range decoder.mutations {
+		for i, mutation := range sm.mutations {
 			if err := mutation(fp); err != nil {
 				return err
 			}
@@ -100,7 +100,7 @@ func (decoder *StructMap) Decode(from map[string]interface{}, to interface{}) (e
 			}
 
 			if mapNeedDecode {
-				if err := decoder.Decode(mapFrom, value.Interface()); err != nil {
+				if err := sm.Decode(mapFrom, value.Interface()); err != nil {
 					return err
 				}
 
