@@ -2,23 +2,23 @@ package structmap
 
 import "reflect"
 
-type Field struct {
+type field struct {
 	reflect.StructField
 	Value reflect.Value
 }
 
 // IsEmbedded returns true if the given field is an anonymous field (embedded)
-func (f Field) IsEmbedded() bool {
+func (f field) IsEmbedded() bool {
 	return f.Anonymous
 }
 
 // IsExported returns true if the given field is exported.
-func (f Field) IsExported() bool {
+func (f field) IsExported() bool {
 	return f.PkgPath == ""
 }
 
 // IsZero returns field is a zero value
-func (f Field) IsZero() bool {
+func (f field) IsZero() bool {
 	zero := reflect.Zero(f.Type).Interface()
 	current := f.Value.Interface()
 

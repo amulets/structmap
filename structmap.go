@@ -6,7 +6,7 @@ import (
 )
 
 type (
-	// FieldPart is a Field representation
+	// FieldPart is a field representation
 	FieldPart struct {
 		Name  string
 		Value interface{}
@@ -44,7 +44,7 @@ func (decoder *StructMap) Decode(from map[string]interface{}, to interface{}) (e
 		}
 	}()
 
-	s, err := NewStruct(to)
+	s, err := newStruct(to)
 	if err != nil {
 		return err
 	}
