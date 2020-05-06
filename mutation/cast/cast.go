@@ -26,13 +26,14 @@ func init() {
 		reflect.Bool:    toBool,
 		reflect.Float32: toFloat,
 		reflect.Map:     toMap,
+		reflect.Struct:  toStruct,
 	}
 }
 
 // ToType cast value to field type value
 func ToType(field *structmap.FieldPart) error {
 	value := reflect.Indirect(reflect.ValueOf(field.Value))
-	if value.Kind() == reflect.Invalid {
+	if !value.IsValid() {
 		// Do not has a value
 		return nil
 	}

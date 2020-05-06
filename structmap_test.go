@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"reflect"
 	"testing"
+	"time"
 
 	"github.com/dungeon-code/structmap"
 	"github.com/dungeon-code/structmap/mutation/cast"
@@ -480,6 +481,27 @@ func TestNameNoop(t *testing.T) {
 
 	sm := structmap.New()
 	sm.AddMutation(name.Noop)
+
+	err := sm.Decode(m, s)
+	if err != nil {
+		t.Error(err)
+	}
+
+	t.Logf("%+v", s)
+}
+
+func TestStructConvert(t *testing.T) {
+	s := &struct {
+		Date time.Time
+	}{}
+
+	m := map[string]interface{}{
+		"Date": 1588791963946,
+	}
+
+	sm := structmap.New()
+	sm.AddMutation(name.Noop)
+	sm.AddMutation(cast.ToType)
 
 	err := sm.Decode(m, s)
 	if err != nil {
