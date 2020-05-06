@@ -89,54 +89,59 @@ func (decoder *StructMap) Decode(from map[string]interface{}, to interface{}) (e
 				value = field.Value.Addr()
 			}
 
-			structFrom := from
+			mapFrom := from
+			mapNeedDecode := true
 
 			if !field.IsEmbedded() {
 				var ok bool
-				if structFrom, ok = fp.Value.(map[string]interface{}); !ok {
-					return fmt.Errorf("field %s cannot is a embedded struct, will expect that's value is a map[string]interface{}", fp.Name)
+				if mapFrom, ok = fp.Value.(map[string]interface{}); !ok {
+					mapNeedDecode = false
 				}
 			}
 
-			if err := decoder.Decode(structFrom, value.Interface()); err != nil {
-				return err
-			}
-		} else {
-			value := reflect.ValueOf(fp.Value)
-			fieldValue := field.Value
+			if mapNeedDecode {
+				if err := decoder.Decode(mapFrom, value.Interface()); err != nil {
+					return err
+				}
 
-			// Get value element
-			if value.Kind() == reflect.Ptr {
-				value = value.Elem()
-			}
-
-			// Ignore if no have a value
-			if value.Kind() == reflect.Invalid {
 				continue
 			}
+		}
 
-			// Get field value element
-			if fieldValue.Kind() == reflect.Ptr {
-				if fieldValue.IsZero() {
-					fieldValue.Set(reflect.New(fieldValue.Type().Elem()))
-				}
+		value := reflect.ValueOf(fp.Value)
+		fieldValue := field.Value
 
-				fieldValue = fieldValue.Elem()
+		// Get value element
+		if value.Kind() == reflect.Ptr {
+			value = value.Elem()
+		}
+
+		// Ignore if no have a value
+		if !value.IsValid() {
+			continue
+		}
+
+		// Get field value element
+		if fieldValue.Kind() == reflect.Ptr {
+			if fieldValue.IsZero() {
+				fieldValue.Set(reflect.New(fieldValue.Type().Elem()))
 			}
 
-			if value.Type().ConvertibleTo(fieldValue.Type()) {
-				value = value.Convert(fieldValue.Type())
-			}
+			fieldValue = fieldValue.Elem()
+		}
 
-			if value.Kind() != fieldValue.Kind() {
-				return fmt.Errorf("field %s value of type %s is not assignable to type %s", field.Name, value.Type(), fieldValue.Type())
-			}
+		if value.Type().ConvertibleTo(fieldValue.Type()) {
+			value = value.Convert(fieldValue.Type())
+		}
 
-			if field.Value.Kind() == reflect.Ptr {
-				field.Value.Elem().Set(value)
-			} else {
-				field.Value.Set(value)
-			}
+		if value.Kind() != fieldValue.Kind() {
+			return fmt.Errorf("field %s value of type %s is not assignable to type %s", field.Name, value.Type(), fieldValue.Type())
+		}
+
+		if field.Value.Kind() == reflect.Ptr {
+			field.Value.Elem().Set(value)
+		} else {
+			field.Value.Set(value)
 		}
 	}
 
