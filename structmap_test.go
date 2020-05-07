@@ -1,7 +1,6 @@
 package structmap_test
 
 import (
-	"fmt"
 	"reflect"
 	"testing"
 	"time"
@@ -9,6 +8,7 @@ import (
 	"github.com/dungeon-code/structmap"
 	"github.com/dungeon-code/structmap/mutation/cast"
 	"github.com/dungeon-code/structmap/mutation/name"
+	"github.com/dungeon-code/structmap/mutation/rule"
 )
 
 type SubSubStruct struct {
@@ -64,22 +64,18 @@ func TestDecode(t *testing.T) {
 	d := structmap.New()
 	d.AddMutation(name.FromTag(defaultTag))
 	d.AddMutation(func(field *structmap.FieldPart) error {
+		if field.Value != nil {
+			return nil
+		}
+
 		value, _ := structmap.ParseTag(field.Tag.Get("default"))
-		if field.Value == nil && value != "" {
+		if value != "" {
 			field.Value = value
 		}
 
 		return nil
 	})
-	d.AddMutation(func(field *structmap.FieldPart) error {
-		_, flags := structmap.ParseTag(field.Tag.Get(defaultTag))
-
-		if flags.Has("required") && field.Value == nil {
-			return fmt.Errorf("Field %s is required", field.Name)
-		}
-
-		return nil
-	})
+	d.AddMutation(rule.Required(defaultTag))
 	d.AddMutation(cast.ToType)
 
 	if err := d.Decode(m, s); err != nil {
