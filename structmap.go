@@ -8,11 +8,12 @@ import (
 type (
 	// FieldPart is a field representation
 	FieldPart struct {
-		Name  string
-		Value interface{}
-		Type  reflect.Type
-		Tag   reflect.StructTag
-		Skip  bool
+		Name       string
+		Value      interface{}
+		Type       reflect.Type
+		Tag        reflect.StructTag
+		Skip       bool
+		IsEmbedded bool
 	}
 
 	// MutationFunc that's change field information
@@ -56,9 +57,10 @@ func (sm *StructMap) Decode(from map[string]interface{}, to interface{}) (err er
 
 	for _, field := range s.Fields() {
 		fp := &FieldPart{
-			Name: field.Name,
-			Tag:  field.Tag,
-			Type: field.Type,
+			Name:       field.Name,
+			Tag:        field.Tag,
+			Type:       field.Type,
+			IsEmbedded: field.IsEmbedded(),
 		}
 
 		// run mutations
@@ -92,7 +94,7 @@ func (sm *StructMap) Decode(from map[string]interface{}, to interface{}) (err er
 			mapFrom := from
 			mapNeedDecode := true
 
-			if !field.IsEmbedded() {
+			if !fp.IsEmbedded {
 				var ok bool
 				if mapFrom, ok = fp.Value.(map[string]interface{}); !ok {
 					mapNeedDecode = false

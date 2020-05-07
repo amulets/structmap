@@ -7,8 +7,8 @@ import (
 
 	"github.com/dungeon-code/structmap"
 	"github.com/dungeon-code/structmap/mutation/cast"
+	"github.com/dungeon-code/structmap/mutation/flag"
 	"github.com/dungeon-code/structmap/mutation/name"
-	"github.com/dungeon-code/structmap/mutation/rule"
 )
 
 type SubSubStruct struct {
@@ -75,7 +75,7 @@ func TestDecode(t *testing.T) {
 
 		return nil
 	})
-	d.AddMutation(rule.Required(defaultTag))
+	d.AddMutation(flag.Required(defaultTag))
 	d.AddMutation(cast.ToType)
 
 	if err := d.Decode(m, s); err != nil {
@@ -501,6 +501,34 @@ func TestStructConvert(t *testing.T) {
 
 	err := sm.Decode(m, s)
 	if err != nil {
+		t.Error(err)
+	}
+
+	t.Logf("%+v", s)
+}
+
+type Person struct {
+	Name string
+}
+
+type Ladies struct {
+	Person `structmap:",noembedded"`
+}
+
+func TestLadies(t *testing.T) {
+	s := new(Ladies)
+	m := map[string]interface{}{
+		"Name": "Luana",
+		"Person": map[string]interface{}{
+			"Name": "Jessica",
+		},
+	}
+
+	sm := structmap.New()
+	sm.AddMutation(name.Noop)
+	sm.AddMutation(flag.NoEmbedded("structmap"))
+
+	if err := sm.Decode(m, s); err != nil {
 		t.Error(err)
 	}
 
