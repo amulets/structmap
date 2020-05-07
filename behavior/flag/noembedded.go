@@ -6,7 +6,7 @@ import "github.com/dungeon-code/structmap"
 // and get it's value from root of map
 // Only for fields marked with the flag: noembedded
 // Example: `tagName:",noembedded"`
-func NoEmbedded(tagName string) structmap.MutationFunc {
+func NoEmbedded(tagName string) structmap.BehaviorFunc {
 	return func(field *structmap.FieldPart) error {
 		if !field.IsEmbedded {
 			return nil

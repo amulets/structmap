@@ -16,12 +16,12 @@ type (
 		IsEmbedded bool
 	}
 
-	// MutationFunc that's change field information
-	MutationFunc func(*FieldPart) error
+	// BehaviorFunc that's change field information
+	BehaviorFunc func(*FieldPart) error
 
 	// StructMap is a structmap
 	StructMap struct {
-		mutations []MutationFunc
+		behaviors []BehaviorFunc
 	}
 )
 
@@ -30,9 +30,9 @@ func New() *StructMap {
 	return &StructMap{}
 }
 
-// AddMutation a new mutation logic
-func (sm *StructMap) AddMutation(mutation MutationFunc) {
-	sm.mutations = append(sm.mutations, mutation)
+// AddBehavior a new behavior logic
+func (sm *StructMap) AddBehavior(behavior BehaviorFunc) {
+	sm.behaviors = append(sm.behaviors, behavior)
 }
 
 // Decode map to struct
@@ -63,13 +63,13 @@ func (sm *StructMap) Decode(from map[string]interface{}, to interface{}) (err er
 			IsEmbedded: field.IsEmbedded(),
 		}
 
-		// run mutations
-		for i, mutation := range sm.mutations {
-			if err := mutation(fp); err != nil {
+		// run behaviors
+		for i, behavior := range sm.behaviors {
+			if err := behavior(fp); err != nil {
 				return err
 			}
 
-			// expects there first mutation get field name to get field value
+			// expects there first behavior get field name to get field value
 			if i == 0 {
 				if value, ok := from[fp.Name]; ok {
 					fp.Value = value

@@ -3,7 +3,7 @@ package name
 import "github.com/dungeon-code/structmap"
 
 // Discovery stop on first discover function, that's change field name
-func Discovery(discoveries ...structmap.MutationFunc) structmap.MutationFunc {
+func Discovery(discoveries ...structmap.BehaviorFunc) structmap.BehaviorFunc {
 	return func(field *structmap.FieldPart) error {
 		currentName := field.Name
 

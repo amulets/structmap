@@ -10,7 +10,7 @@ import (
 // is present, otherwise an exception will be thrown.
 // Only for fields marked with the flag: required
 // Example: `tagName:",required"`
-func Required(tagName string) structmap.MutationFunc {
+func Required(tagName string) structmap.BehaviorFunc {
 	return func(field *structmap.FieldPart) (err error) {
 		if field.Value != nil {
 			return

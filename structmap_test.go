@@ -6,9 +6,9 @@ import (
 	"time"
 
 	"github.com/dungeon-code/structmap"
-	"github.com/dungeon-code/structmap/mutation/cast"
-	"github.com/dungeon-code/structmap/mutation/flag"
-	"github.com/dungeon-code/structmap/mutation/name"
+	"github.com/dungeon-code/structmap/behavior/cast"
+	"github.com/dungeon-code/structmap/behavior/flag"
+	"github.com/dungeon-code/structmap/behavior/name"
 )
 
 type SubSubStruct struct {
@@ -62,8 +62,8 @@ func TestDecode(t *testing.T) {
 	defaultTag := "structmap"
 
 	d := structmap.New()
-	d.AddMutation(name.FromTag(defaultTag))
-	d.AddMutation(func(field *structmap.FieldPart) error {
+	d.AddBehavior(name.FromTag(defaultTag))
+	d.AddBehavior(func(field *structmap.FieldPart) error {
 		if field.Value != nil {
 			return nil
 		}
@@ -75,8 +75,8 @@ func TestDecode(t *testing.T) {
 
 		return nil
 	})
-	d.AddMutation(flag.Required(defaultTag))
-	d.AddMutation(cast.ToType)
+	d.AddBehavior(flag.Required(defaultTag))
+	d.AddBehavior(cast.ToType)
 
 	if err := d.Decode(m, s); err != nil {
 		t.Error(err)
@@ -165,7 +165,7 @@ func TestDefaultTypes(t *testing.T) {
 	var result DefaultTypes
 
 	sm := structmap.New()
-	sm.AddMutation(name.FromTag("structmap"))
+	sm.AddBehavior(name.FromTag("structmap"))
 
 	err := sm.Decode(input, &result)
 	if err != nil {
@@ -230,7 +230,7 @@ func TestFromDefaultTypesToPointer(t *testing.T) {
 	var result DefaultTypesPointer
 
 	sm := structmap.New()
-	sm.AddMutation(name.FromTag("structmap"))
+	sm.AddBehavior(name.FromTag("structmap"))
 
 	err := sm.Decode(input, &result)
 	if err != nil {
@@ -299,7 +299,7 @@ func TestFromPointerToDefaultTypes(t *testing.T) {
 	var result DefaultTypes
 
 	sm := structmap.New()
-	sm.AddMutation(name.FromTag("structmap"))
+	sm.AddBehavior(name.FromTag("structmap"))
 
 	err := sm.Decode(input, &result)
 	if err != nil {
@@ -372,7 +372,7 @@ func TestFromPointerToPointer(t *testing.T) {
 	var result DefaultTypesPointer
 
 	sm := structmap.New()
-	sm.AddMutation(name.FromTag("structmap"))
+	sm.AddBehavior(name.FromTag("structmap"))
 
 	err := sm.Decode(input, &result)
 	if err != nil {
@@ -428,8 +428,8 @@ func TestMapCast(t *testing.T) {
 	}
 
 	sm := structmap.New()
-	sm.AddMutation(name.FromTag("structmap"))
-	sm.AddMutation(cast.ToType)
+	sm.AddBehavior(name.FromTag("structmap"))
+	sm.AddBehavior(cast.ToType)
 
 	err := sm.Decode(m, s)
 	if err != nil {
@@ -454,7 +454,7 @@ func TestName(t *testing.T) {
 	}
 
 	sm := structmap.New()
-	sm.AddMutation(name.Discovery(name.FromTag("json"), name.FromTag("bson"), name.FromSnake))
+	sm.AddBehavior(name.Discovery(name.FromTag("json"), name.FromTag("bson"), name.FromSnake))
 
 	err := sm.Decode(m, s)
 	if err != nil {
@@ -476,7 +476,7 @@ func TestNameNoop(t *testing.T) {
 	}
 
 	sm := structmap.New()
-	sm.AddMutation(name.Noop)
+	sm.AddBehavior(name.Noop)
 
 	err := sm.Decode(m, s)
 	if err != nil {
@@ -496,8 +496,8 @@ func TestStructConvert(t *testing.T) {
 	}
 
 	sm := structmap.New()
-	sm.AddMutation(name.Noop)
-	sm.AddMutation(cast.ToType)
+	sm.AddBehavior(name.Noop)
+	sm.AddBehavior(cast.ToType)
 
 	err := sm.Decode(m, s)
 	if err != nil {
@@ -525,8 +525,8 @@ func TestLadies(t *testing.T) {
 	}
 
 	sm := structmap.New()
-	sm.AddMutation(name.Noop)
-	sm.AddMutation(flag.NoEmbedded("structmap"))
+	sm.AddBehavior(name.Noop)
+	sm.AddBehavior(flag.NoEmbedded("structmap"))
 
 	if err := sm.Decode(m, s); err != nil {
 		t.Error(err)
