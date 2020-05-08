@@ -5,10 +5,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/dungeon-code/structmap"
-	"github.com/dungeon-code/structmap/behavior/cast"
-	"github.com/dungeon-code/structmap/behavior/flag"
-	"github.com/dungeon-code/structmap/behavior/name"
+	"github.com/amulets/structmap"
+	"github.com/amulets/structmap/behavior/cast"
+	"github.com/amulets/structmap/behavior/flag"
+	"github.com/amulets/structmap/behavior/name"
 )
 
 type SubSubStruct struct {

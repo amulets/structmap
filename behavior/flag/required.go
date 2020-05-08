@@ -3,7 +3,7 @@ package flag
 import (
 	"fmt"
 
-	"github.com/dungeon-code/structmap"
+	"github.com/amulets/structmap"
 )
 
 // Required checks if the value to be filled in the structure

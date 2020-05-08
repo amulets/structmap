@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"reflect"
 
-	"github.com/dungeon-code/structmap"
+	"github.com/amulets/structmap"
 )
 
 var (

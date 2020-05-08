@@ -1,7 +1,7 @@
 package name
 
 import (
-	"github.com/dungeon-code/structmap"
+	"github.com/amulets/structmap"
 	"github.com/huandu/xstrings"
 )
 

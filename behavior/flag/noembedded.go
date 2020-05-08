@@ -1,6 +1,6 @@
 package flag
 
-import "github.com/dungeon-code/structmap"
+import "github.com/amulets/structmap"
 
 // NoEmbedded treat embedded struct as non embedded struct
 // and get it's value from root of map

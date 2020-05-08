@@ -1,6 +1,6 @@
 package name
 
-import "github.com/dungeon-code/structmap"
+import "github.com/amulets/structmap"
 
 // Discovery stop on first discover function, that's change field name
 func Discovery(discoveries ...structmap.BehaviorFunc) structmap.BehaviorFunc {

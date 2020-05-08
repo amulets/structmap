@@ -1,4 +1,4 @@
-module github.com/dungeon-code/structmap
+module github.com/amulets/structmap
 
 go 1.13
 

@@ -1,6 +1,6 @@
 package name
 
-import "github.com/dungeon-code/structmap"
+import "github.com/amulets/structmap"
 
 // FromTag get field name from tagName, if has a name
 func FromTag(tagName string) structmap.BehaviorFunc {
