@@ -16,7 +16,7 @@ type (
 		IsEmbedded bool
 	}
 
-	// BehaviorFunc that's change field information
+	// BehaviorFunc that deals with the behavior of the field
 	BehaviorFunc func(*FieldPart) error
 
 	// StructMap is a structmap
