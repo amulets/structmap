@@ -2,7 +2,7 @@
 <br />
 <p align="center">
   <a href="https://github.com/amulets/structmap">
-    <img src="images/logo.svg" alt="Logo" width="200" height="200">
+    <img src="images/logo.png" alt="Logo" width="300" height="300">
   </a>
 
 <!-- PROJECT SHIELDS -->
