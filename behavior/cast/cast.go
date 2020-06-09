@@ -27,6 +27,8 @@ func init() {
 		reflect.Float32: toFloat,
 		reflect.Map:     toMap,
 		reflect.Struct:  toStruct,
+		reflect.Slice:   toList,
+		reflect.Array:   toList,
 	}
 }
 
@@ -48,6 +50,7 @@ func ToType(field *structmap.FieldPart) error {
 			err = fmt.Errorf("'%s' expected type '%s', got non-convertible type '%s'", field.Name, field.Type, value.Type())
 			fallthrough
 		default:
+			err = fmt.Errorf("%s: %s", field.Name, err)
 			return err
 		}
 	}

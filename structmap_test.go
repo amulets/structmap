@@ -534,3 +534,77 @@ func TestLadies(t *testing.T) {
 
 	t.Logf("%+v", s)
 }
+
+func TestSliceToSlice(t *testing.T) {
+	s := new(struct {
+		Numbers []int
+	})
+	m := map[string]interface{}{
+		"Numbers": []int{1, 2, 3},
+	}
+
+	sm := structmap.New()
+	sm.AddBehavior(name.Noop)
+
+	if err := sm.Decode(m, s); err != nil {
+		t.Error(err)
+	}
+
+	t.Logf("%+v", s)
+}
+
+func TestArrayToArray(t *testing.T) {
+	s := new(struct {
+		Numbers [3]int
+	})
+	m := map[string]interface{}{
+		"Numbers": [3]int{1, 2, 3},
+	}
+
+	sm := structmap.New()
+	sm.AddBehavior(name.Noop)
+
+	if err := sm.Decode(m, s); err != nil {
+		t.Error(err)
+	}
+
+	t.Logf("%+v", s)
+}
+
+func TestSliceToArrayConverter(t *testing.T) {
+	s := new(struct {
+		Times [3]int
+	})
+	m := map[string]interface{}{
+		"Times": []int{1588791963946, 1588791963946, 1588791963946},
+	}
+
+	sm := structmap.New()
+	sm.AddBehavior(name.Noop)
+	sm.AddBehavior(cast.ToType)
+
+	if err := sm.Decode(m, s); err != nil {
+		t.Error(err)
+	}
+
+	t.Logf("%+v", s)
+}
+
+func TestSliceToArrayConverterType(t *testing.T) {
+	s := new(struct {
+		Times [3]time.Time
+	})
+	m := map[string]interface{}{
+		"Times": []int{1588791963946, 1588791963946, 1588791963946},
+	}
+
+	sm := structmap.New()
+	sm.AddBehavior(name.Noop)
+	sm.AddBehavior(cast.ToType)
+
+	if err := sm.Decode(m, s); err != nil {
+		t.Error(err)
+	}
+
+	t.Logf("%+v", s)
+}
