@@ -608,3 +608,49 @@ func TestSliceToArrayConverterType(t *testing.T) {
 
 	t.Logf("%+v", s)
 }
+
+func TestToNoStructOrMap(t *testing.T) {
+	to := 10
+	from := map[string]interface{}{}
+
+	sm := structmap.New()
+	sm.AddBehavior(name.Noop)
+
+	if err := sm.Decode(from, &to); err == nil {
+		t.Error("expected error: to value: cannot is a struct; got nil")
+	}
+}
+
+func TestFromNoStructOrMap(t *testing.T) {
+	to := struct{}{}
+	from := 10
+
+	sm := structmap.New()
+	sm.AddBehavior(name.Noop)
+
+	if err := sm.Decode(from, &to); err == nil {
+		t.Error("expected error: from value: cannot is map or struct; got nil")
+	}
+}
+
+func TestStructToStruct(t *testing.T) {
+	to := struct {
+		Age int
+	}{}
+
+	from := struct {
+		Age string
+	}{
+		Age: "20",
+	}
+
+	sm := structmap.New()
+	sm.AddBehavior(name.Noop)
+	sm.AddBehavior(cast.ToType)
+
+	if err := sm.Decode(from, &to); err != nil {
+		t.Error(err)
+	}
+
+	t.Logf("%+v", to)
+}

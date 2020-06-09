@@ -48,13 +48,13 @@ func (sm *StructMap) Decode(from interface{}, to interface{}) (err error) {
 	if _, ok := from.(map[string]interface{}); !ok {
 		from, err = newStruct(from)
 		if err != nil {
-			return err
+			return fmt.Errorf("from value: cannot is map or struct")
 		}
 	}
 
 	s, err := newStruct(to)
 	if err != nil {
-		return err
+		return fmt.Errorf("to value: %s", err)
 	}
 
 	// Struct is configurable?
