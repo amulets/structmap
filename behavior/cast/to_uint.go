@@ -39,10 +39,8 @@ func toUint(source reflect.Type, value reflect.Value) (result interface{}, err e
 			sourceType = source.Elem()
 		}
 
-		if i, err := strconv.ParseUint(value.String(), 0, sourceType.Bits()); err != nil {
+		if result, err = strconv.ParseUint(value.String(), 0, sourceType.Bits()); err != nil {
 			err = fmt.Errorf("cannot parse to uint: %s", err)
-		} else {
-			result = i
 		}
 	default:
 		err = errNoConvertible
