@@ -27,10 +27,7 @@ func toFloat(source reflect.Type, value reflect.Value) (result interface{}, err 
 			sourceType = source.Elem()
 		}
 
-		f, err := strconv.ParseFloat(value.String(), sourceType.Bits())
-		if err == nil {
-			result = f
-		} else {
+		if result, err = strconv.ParseFloat(value.String(), sourceType.Bits()); err != nil {
 			err = fmt.Errorf("cannot parse to float: %s", err)
 		}
 	default:

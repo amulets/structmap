@@ -27,10 +27,7 @@ func toInt(source reflect.Type, value reflect.Value) (result interface{}, err er
 			sourceType = source.Elem()
 		}
 
-		i, err := strconv.ParseInt(value.String(), 0, sourceType.Bits())
-		if err == nil {
-			result = i
-		} else {
+		if result, err = strconv.ParseInt(value.String(), 0, sourceType.Bits()); err != nil {
 			err = fmt.Errorf("cannot parse to int: %s", err)
 		}
 	default:
