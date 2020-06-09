@@ -36,7 +36,7 @@ func (sm *StructMap) AddBehavior(behavior BehaviorFunc) {
 }
 
 // Decode map to struct
-func (sm *StructMap) Decode(from map[string]interface{}, to interface{}) (err error) {
+func (sm *StructMap) Decode(from interface{}, to interface{}) (err error) {
 	defer func() {
 		if err == nil {
 			if recovered := recover(); recovered != nil {
@@ -44,6 +44,13 @@ func (sm *StructMap) Decode(from map[string]interface{}, to interface{}) (err er
 			}
 		}
 	}()
+
+	if _, ok := from.(map[string]interface{}); !ok {
+		from, err = newStruct(from)
+		if err != nil {
+			return err
+		}
+	}
 
 	s, err := newStruct(to)
 	if err != nil {
@@ -71,8 +78,15 @@ func (sm *StructMap) Decode(from map[string]interface{}, to interface{}) (err er
 
 			// expects there first behavior get field name to get field value
 			if i == 0 {
-				if value, ok := from[fp.Name]; ok {
-					fp.Value = value
+				switch fromValue := from.(type) {
+				case map[string]interface{}:
+					if value, ok := fromValue[fp.Name]; ok {
+						fp.Value = value
+					}
+				case *strct:
+					if _, ok := fromValue.Type().FieldByName(fp.Name); ok {
+						fp.Value = fromValue.FieldByName(fp.Name).Interface()
+					}
 				}
 			}
 		}
@@ -91,18 +105,40 @@ func (sm *StructMap) Decode(from map[string]interface{}, to interface{}) (err er
 				value = field.Value.Addr()
 			}
 
-			mapFrom := from
-			mapNeedDecode := true
+			fromFace := from
+			needDecode := true
 
 			if !fp.IsEmbedded {
-				var ok bool
-				if mapFrom, ok = fp.Value.(map[string]interface{}); !ok {
-					mapNeedDecode = false
+				switch from.(type) {
+				case map[string]interface{}:
+					if mapValue, ok := fp.Value.(map[string]interface{}); ok {
+						needDecode = len(mapValue) > 0
+
+						if needDecode {
+							fromFace = mapValue
+						}
+					} else {
+						needDecode = false
+					}
+				case *strct:
+					if strctValue, err := newStruct(fp.Value); err == nil {
+						needDecode = strctValue.IsValid()
+
+						if needDecode {
+							fromFace = strctValue.Interface()
+						}
+					} else {
+						needDecode = false
+					}
 				}
 			}
 
-			if mapNeedDecode {
-				if err := sm.Decode(mapFrom, value.Interface()); err != nil {
+			if needDecode {
+				if strctValue, ok := fromFace.(*strct); ok {
+					fromFace = strctValue.Interface()
+				}
+
+				if err := sm.Decode(fromFace, value.Interface()); err != nil {
 					return err
 				}
 
