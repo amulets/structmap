@@ -1,6 +1,7 @@
 package structmap_test
 
 import (
+	"fmt"
 	"reflect"
 	"testing"
 	"time"
@@ -9,6 +10,7 @@ import (
 	"github.com/amulets/structmap/behavior/cast"
 	"github.com/amulets/structmap/behavior/flag"
 	"github.com/amulets/structmap/behavior/name"
+	"github.com/amulets/structmap/internal"
 )
 
 type SubSubStruct struct {
@@ -607,4 +609,52 @@ func TestSliceToArrayConverterType(t *testing.T) {
 	}
 
 	t.Logf("%+v", s)
+}
+
+func TestSimple(t *testing.T) {
+	s := new(struct {
+		A **string
+		B struct {
+			C string
+		}
+		D *int
+	})
+
+	var (
+		a1 **string
+		a2 *string
+		a3 string
+	)
+
+	a3 = "A"
+	a2 = &a3
+	a1 = &a2
+
+	m := map[string]interface{}{
+		"A": "B",
+		"B": map[string]interface{}{
+			"C": a1,
+		},
+		"D": nil,
+	}
+
+	sm := structmap.New()
+	sm.AddBehavior(name.Noop)
+
+	if err := sm.Decode(m, s); err != nil {
+		t.Error(err)
+	}
+
+	t.Logf("%+v", s)
+}
+
+func TestSetValue(t *testing.T) {
+	var ptr ***string
+	var val = "A"
+
+	internal.SetValue(reflect.ValueOf(&ptr).Elem(), reflect.ValueOf(val))
+
+	if ptr != nil {
+		fmt.Println(***ptr)
+	}
 }

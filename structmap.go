@@ -3,6 +3,8 @@ package structmap
 import (
 	"fmt"
 	"reflect"
+
+	"github.com/amulets/structmap/internal"
 )
 
 type (
@@ -56,10 +58,12 @@ func (sm *StructMap) Decode(from map[string]interface{}, to interface{}) (err er
 	}
 
 	for _, field := range s.Fields() {
+		fieldType := internal.Type(field.Type)
+
 		fp := &FieldPart{
 			Name:       field.Name,
 			Tag:        field.Tag,
-			Type:       field.Type,
+			Type:       fieldType,
 			IsEmbedded: field.IsEmbedded(),
 		}
 
@@ -71,8 +75,12 @@ func (sm *StructMap) Decode(from map[string]interface{}, to interface{}) (err er
 
 			// expects there first behavior get field name to get field value
 			if i == 0 {
-				if value, ok := from[fp.Name]; ok {
-					fp.Value = value
+				if rawValue, ok := from[fp.Name]; ok {
+					value := internal.Value(reflect.ValueOf(rawValue))
+
+					if value.IsValid() {
+						fp.Value = value.Interface()
+					}
 				}
 			}
 		}
@@ -81,12 +89,13 @@ func (sm *StructMap) Decode(from map[string]interface{}, to interface{}) (err er
 			continue
 		}
 
-		if field.Type.Kind() == reflect.Struct || (field.Type.Kind() == reflect.Ptr && field.Type.Elem().Kind() == reflect.Struct) {
+		if fieldType.Kind() == reflect.Struct {
 			value := field.Value
 
 			if field.Value.Kind() == reflect.Ptr && field.IsZero() {
-				pv := reflect.New(field.Type.Elem())
-				field.Value.Set(pv)
+				pv := reflect.New(fieldType)
+
+				internal.SetValue(field.Value, pv.Elem())
 			} else {
 				value = field.Value.Addr()
 			}
@@ -111,40 +120,21 @@ func (sm *StructMap) Decode(from map[string]interface{}, to interface{}) (err er
 		}
 
 		value := reflect.ValueOf(fp.Value)
-		fieldValue := field.Value
-
-		// Get value element
-		if value.Kind() == reflect.Ptr {
-			value = value.Elem()
-		}
 
 		// Ignore if no have a value
 		if !value.IsValid() {
 			continue
 		}
 
-		// Get field value element
-		if fieldValue.Kind() == reflect.Ptr {
-			if fieldValue.IsZero() {
-				fieldValue.Set(reflect.New(fieldValue.Type().Elem()))
-			}
-
-			fieldValue = fieldValue.Elem()
+		if value.Type().ConvertibleTo(fieldType) {
+			value = value.Convert(fieldType)
 		}
 
-		if value.Type().ConvertibleTo(fieldValue.Type()) {
-			value = value.Convert(fieldValue.Type())
+		if value.Kind() != fieldType.Kind() {
+			return fmt.Errorf("field %s value of type %s is not assignable to type %s", field.Name, value.Type(), fieldType)
 		}
 
-		if value.Kind() != fieldValue.Kind() {
-			return fmt.Errorf("field %s value of type %s is not assignable to type %s", field.Name, value.Type(), fieldValue.Type())
-		}
-
-		if field.Value.Kind() == reflect.Ptr {
-			field.Value.Elem().Set(value)
-		} else {
-			field.Value.Set(value)
-		}
+		internal.SetValue(field.Value, value)
 	}
 
 	return nil
