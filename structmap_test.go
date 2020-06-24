@@ -756,3 +756,23 @@ func TestCastMap(t *testing.T) {
 
 	t.Logf("%+v", s)
 }
+
+func TestNil(t *testing.T) {
+	s := new(struct {
+		A *string
+	})
+
+	m := map[string]interface{}{
+		"A": nil,
+	}
+
+	sm := structmap.New()
+	sm.AddBehavior(name.Noop)
+
+	err := sm.Decode(m, s)
+	if err != nil {
+		t.Error(err)
+	}
+
+	t.Logf("%+v", s)
+}
