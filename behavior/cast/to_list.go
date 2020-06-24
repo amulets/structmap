@@ -3,6 +3,8 @@ package cast
 import (
 	"fmt"
 	"reflect"
+
+	"github.com/amulets/structmap/internal"
 )
 
 func toList(source reflect.Type, value reflect.Value) (result interface{}, err error) {
@@ -17,7 +19,8 @@ func toList(source reflect.Type, value reflect.Value) (result interface{}, err e
 	}
 
 	// It is a same type
-	if value.Type().Elem().Kind() == source.Elem().Kind() && value.Kind() == source.Kind() {
+	if value.Kind() == source.Kind() && internal.Type(value.Type().Elem()).Kind() == internal.Type(source.Elem()).Kind() {
+		result = value.Interface()
 		return
 	}
 
@@ -46,34 +49,18 @@ func toList(source reflect.Type, value reflect.Value) (result interface{}, err e
 		return
 	}
 
-	var (
-		item      interface{}
-		itemValue reflect.Value
-	)
 	for i := 0; i < value.Len(); i++ {
-		itemValue = value.Index(i)
+		itemValue := value.Index(i)
 
-		item, err = toType(source.Elem(), itemValue)
-		if err == errNoCoveredType {
-			err = nil
-		}
-
-		if err != nil {
-			return
-		}
-
-		if item != nil {
-			itemValue = reflect.ValueOf(item)
-		}
-
-		// If do not is a slice, convert its type ex: int32 to int
-		if itemValue.Kind() != reflect.Slice {
-			if !itemValue.Type().ConvertibleTo(source.Elem()) {
-				err = fmt.Errorf("slice item %v cannot is convertible to %s", itemValue.Interface(), source.Elem().Kind())
+		if itemValue, err = toType(source.Elem(), itemValue); err != nil {
+			switch err {
+			case errEmptyValue:
+				fallthrough
+			case errNoCoveredType:
+				err = nil
+			default:
 				return
 			}
-
-			itemValue = itemValue.Convert(source.Elem())
 		}
 
 		if sourceKind == reflect.Slice {

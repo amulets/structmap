@@ -658,3 +658,101 @@ func TestSetValue(t *testing.T) {
 		fmt.Println(***ptr)
 	}
 }
+
+func TestCast(t *testing.T) {
+	s := new(struct {
+		A string
+	})
+	m := map[string]interface{}{
+		"A": "B",
+	}
+
+	sm := structmap.New()
+	sm.AddBehavior(name.Noop)
+	sm.AddBehavior(cast.ToType)
+
+	err := sm.Decode(m, s)
+	if err != nil {
+		t.Error(err)
+	}
+
+	t.Logf("%+v", s)
+}
+
+func TestCastComplex(t *testing.T) {
+	s := new(struct {
+		A []*string
+	})
+
+	var (
+		i0 **int
+		i1 *int
+		i2 int
+	)
+
+	i2 = 0
+	i1 = &i2
+	i0 = &i1
+
+	m := map[string]interface{}{
+		"A": []**int{i0, nil},
+	}
+
+	sm := structmap.New()
+	sm.AddBehavior(name.Noop)
+	sm.AddBehavior(cast.ToType)
+
+	err := sm.Decode(m, s)
+	if err != nil {
+		t.Error(err)
+	}
+
+	t.Logf("%+v", s)
+}
+
+func TestCastInterface(t *testing.T) {
+	s := new(struct {
+		A []string
+	})
+
+	m := map[string]interface{}{
+		"A": []interface{}{0},
+	}
+
+	sm := structmap.New()
+	sm.AddBehavior(name.Noop)
+	sm.AddBehavior(cast.ToType)
+
+	err := sm.Decode(m, s)
+	if err != nil {
+		t.Error(err)
+	}
+
+	t.Logf("%+v", s)
+}
+
+func TestCastMap(t *testing.T) {
+	s := new(struct {
+		A map[string]*int
+	})
+
+	m := map[string]interface{}{
+		"A": map[int]string{
+			1: "2",
+			2: "1",
+		},
+	}
+
+	sm := structmap.New()
+	sm.AddBehavior(name.Noop)
+	sm.AddBehavior(cast.ToType)
+
+	err := sm.Decode(m, s)
+	if err != nil {
+		t.Error(err)
+	}
+
+	fmt.Println(*s.A["1"])
+
+	t.Logf("%+v", s)
+}

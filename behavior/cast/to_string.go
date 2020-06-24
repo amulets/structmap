@@ -8,7 +8,7 @@ import (
 func toString(source reflect.Type, value reflect.Value) (result interface{}, err error) {
 	switch toKind(value.Type()) {
 	case reflect.String:
-		// Ignore is a string type
+		result = value.String()
 	case reflect.Bool:
 		if value.Bool() {
 			result = "1"

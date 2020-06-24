@@ -70,16 +70,21 @@ func TestToKind(t *testing.T) {
 			raw:  float64(1),
 			kind: reflect.Float32,
 		},
+		{
+			raw:  [5]interface{}{},
+			kind: reflect.Array,
+		},
+		{
+			raw:  []interface{}{},
+			kind: reflect.Slice,
+		},
 	}
 
 	for _, value := range values {
 		typeOf := reflect.TypeOf(value.raw)
-		typeOfPtr := reflect.PtrTo(typeOf)
 
-		for _, typ := range []reflect.Type{typeOf, typeOfPtr} {
-			if kind := toKind(typ); kind != value.kind {
-				t.Errorf("expected %s; got %s", value.kind, kind)
-			}
+		if kind := toKind(typeOf); kind != value.kind {
+			t.Errorf("expected %s; got %s", value.kind, kind)
 		}
 	}
 }

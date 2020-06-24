@@ -9,7 +9,7 @@ import (
 func toUint(source reflect.Type, value reflect.Value) (result interface{}, err error) {
 	switch toKind(value.Type()) {
 	case reflect.Uint:
-		// Ignore is a uint type
+		result = value.Uint()
 	case reflect.Int:
 		i := value.Int()
 		if i < 0 {
@@ -33,14 +33,10 @@ func toUint(source reflect.Type, value reflect.Value) (result interface{}, err e
 			result = uint(0)
 		}
 	case reflect.String:
-		sourceType := source
+		var u uint64
 
-		if source.Kind() == reflect.Ptr {
-			sourceType = source.Elem()
-		}
-
-		if result, err = strconv.ParseUint(value.String(), 0, sourceType.Bits()); err != nil {
-			err = fmt.Errorf("cannot parse to uint: %s", err)
+		if u, err = strconv.ParseUint(value.String(), 0, source.Bits()); err == nil {
+			result = u
 		}
 	default:
 		err = errNoConvertible
