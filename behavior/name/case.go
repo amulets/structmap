@@ -2,33 +2,36 @@ package name
 
 import (
 	"github.com/amulets/structmap"
+	"github.com/amulets/structmap/behavior"
 	"github.com/huandu/xstrings"
 )
 
-// FromSnake transforms field name in snake_case format
-func FromSnake(field *structmap.FieldPart) error {
-	field.Name = xstrings.ToSnakeCase(field.Name)
+var (
+	// FromSnake transforms field name in snake_case format
+	FromSnake = behavior.New(func(field *structmap.FieldPart) error {
+		field.Name = xstrings.ToSnakeCase(field.Name)
 
-	return nil
-}
+		return nil
+	})
 
-// FromCamel transforms field name in camelCase format
-func FromCamel(field *structmap.FieldPart) error {
-	field.Name = xstrings.FirstRuneToLower(xstrings.ToCamelCase(xstrings.ToSnakeCase(field.Name)))
+	// FromCamel transforms field name in camelCase format
+	FromCamel = behavior.New(func(field *structmap.FieldPart) error {
+		field.Name = xstrings.FirstRuneToLower(xstrings.ToCamelCase(xstrings.ToSnakeCase(field.Name)))
 
-	return nil
-}
+		return nil
+	})
 
-// FromPascal transforms field name in PascalCase format
-func FromPascal(field *structmap.FieldPart) error {
-	field.Name = xstrings.ToCamelCase(xstrings.ToSnakeCase(field.Name))
+	// FromPascal transforms field name in PascalCase format
+	FromPascal = behavior.New(func(field *structmap.FieldPart) error {
+		field.Name = xstrings.ToCamelCase(xstrings.ToSnakeCase(field.Name))
 
-	return nil
-}
+		return nil
+	})
 
-// FromKebab transforms field name in kebab-case format
-func FromKebab(field *structmap.FieldPart) error {
-	field.Name = xstrings.ToKebabCase(field.Name)
+	// FromKebab transforms field name in kebab-case format
+	FromKebab = behavior.New(func(field *structmap.FieldPart) error {
+		field.Name = xstrings.ToKebabCase(field.Name)
 
-	return nil
-}
+		return nil
+	})
+)

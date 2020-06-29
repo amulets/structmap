@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/amulets/structmap"
+	"github.com/amulets/structmap/behavior"
 	"github.com/amulets/structmap/behavior/cast"
 	"github.com/amulets/structmap/behavior/flag"
 	"github.com/amulets/structmap/behavior/name"
@@ -65,7 +66,7 @@ func TestDecode(t *testing.T) {
 
 	d := structmap.New()
 	d.AddBehavior(name.FromTag(defaultTag))
-	d.AddBehavior(func(field *structmap.FieldPart) error {
+	d.AddBehavior(behavior.New(func(field *structmap.FieldPart) error {
 		if field.Value != nil {
 			return nil
 		}
@@ -76,7 +77,7 @@ func TestDecode(t *testing.T) {
 		}
 
 		return nil
-	})
+	}))
 	d.AddBehavior(flag.Required(defaultTag))
 	d.AddBehavior(cast.ToType)
 

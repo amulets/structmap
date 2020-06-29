@@ -4,14 +4,15 @@ import (
 	"fmt"
 
 	"github.com/amulets/structmap"
+	"github.com/amulets/structmap/behavior"
 )
 
 // Required checks if the value to be filled in the structure
 // is present, otherwise an exception will be thrown.
 // Only for fields marked with the flag: required
 // Example: `tagName:",required"`
-func Required(tagName string) structmap.BehaviorFunc {
-	return func(field *structmap.FieldPart) (err error) {
+func Required(tagName string) structmap.Behavior {
+	return behavior.New(func(field *structmap.FieldPart) (err error) {
 		if field.Value != nil {
 			return
 		}
@@ -23,5 +24,5 @@ func Required(tagName string) structmap.BehaviorFunc {
 		}
 
 		return
-	}
+	})
 }

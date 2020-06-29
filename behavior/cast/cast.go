@@ -6,6 +6,7 @@ import (
 	"reflect"
 
 	"github.com/amulets/structmap"
+	"github.com/amulets/structmap/behavior"
 	"github.com/amulets/structmap/internal"
 )
 
@@ -36,7 +37,7 @@ func init() {
 }
 
 // ToType cast value to field type value
-func ToType(field *structmap.FieldPart) error {
+var ToType = behavior.New(func(field *structmap.FieldPart) error {
 	//Field value cannot is a pointer
 	value := reflect.ValueOf(field.Value)
 
@@ -60,7 +61,7 @@ func ToType(field *structmap.FieldPart) error {
 	field.Value = toValue.Interface()
 
 	return nil
-}
+})
 
 func toType(from reflect.Type, value reflect.Value) (to reflect.Value, err error) {
 	// set received value to return
