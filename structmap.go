@@ -76,7 +76,7 @@ func (sm *StructMap) Decode(from map[string]interface{}, to interface{}) (err er
 			// expects there first behavior get field name to get field value
 			if i == 0 {
 				if rawValue, ok := from[fp.Name]; ok {
-					value := internal.Value(reflect.ValueOf(rawValue))
+					value := internal.Value(reflect.ValueOf(rawValue), false)
 
 					if value.IsValid() {
 						fp.Value = value.Interface()

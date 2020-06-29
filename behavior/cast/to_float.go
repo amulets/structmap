@@ -1,7 +1,6 @@
 package cast
 
 import (
-	"fmt"
 	"reflect"
 	"strconv"
 )
@@ -9,7 +8,7 @@ import (
 func toFloat(source reflect.Type, value reflect.Value) (result interface{}, err error) {
 	switch toKind(value.Type()) {
 	case reflect.Float32:
-		// Ignore is a float type
+		result = value.Interface()
 	case reflect.Int:
 		result = float64(value.Int())
 	case reflect.Uint:
@@ -21,14 +20,10 @@ func toFloat(source reflect.Type, value reflect.Value) (result interface{}, err 
 			result = float32(0)
 		}
 	case reflect.String:
-		sourceType := source
+		var f float64
 
-		if source.Kind() == reflect.Ptr {
-			sourceType = source.Elem()
-		}
-
-		if result, err = strconv.ParseFloat(value.String(), sourceType.Bits()); err != nil {
-			err = fmt.Errorf("cannot parse to float: %s", err)
+		if f, err = strconv.ParseFloat(value.String(), source.Bits()); err == nil {
+			result = f
 		}
 	default:
 		err = errNoConvertible

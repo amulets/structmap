@@ -1,7 +1,6 @@
 package cast
 
 import (
-	"fmt"
 	"reflect"
 	"strconv"
 )
@@ -9,7 +8,7 @@ import (
 func toBool(source reflect.Type, value reflect.Value) (result interface{}, err error) {
 	switch toKind(value.Type()) {
 	case reflect.Bool:
-		// Ignore is a bool type
+		result = value.Bool()
 	case reflect.Int:
 		result = value.Int() != 0
 	case reflect.Uint:
@@ -17,13 +16,13 @@ func toBool(source reflect.Type, value reflect.Value) (result interface{}, err e
 	case reflect.Float32:
 		result = value.Float() != 0
 	case reflect.String:
-		if result, err = strconv.ParseBool(value.String()); err != nil {
-			if value.String() == "" {
-				err = nil
-				result = false
-			} else {
-				err = fmt.Errorf("cannot parse to bool: %s", err)
-			}
+		var b bool
+
+		if b, err = strconv.ParseBool(value.String()); err == nil {
+			result = b
+		} else if value.String() == "" {
+			err = nil
+			result = false
 		}
 	default:
 		err = errNoConvertible

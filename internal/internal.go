@@ -14,9 +14,9 @@ func Type(value reflect.Type) reflect.Type {
 }
 
 // Value get real value
-func Value(value reflect.Value) reflect.Value {
-	if value.Kind() == reflect.Ptr {
-		value = Value(value.Elem())
+func Value(value reflect.Value, fromInterface bool) reflect.Value {
+	if (value.Kind() == reflect.Ptr) || (fromInterface && value.Kind() == reflect.Interface) {
+		value = Value(value.Elem(), fromInterface)
 	}
 
 	return value

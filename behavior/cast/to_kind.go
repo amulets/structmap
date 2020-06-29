@@ -6,10 +6,6 @@ import "reflect"
 func toKind(value reflect.Type) reflect.Kind {
 	kind := value.Kind()
 
-	if kind == reflect.Ptr {
-		kind = value.Elem().Kind()
-	}
-
 	switch {
 	case kind >= reflect.Int && kind <= reflect.Int64:
 		return reflect.Int
