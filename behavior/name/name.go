@@ -1,14 +1,17 @@
 package name
 
-import "github.com/amulets/structmap"
+import (
+	"github.com/amulets/structmap"
+	"github.com/amulets/structmap/behavior"
+)
 
 // Discovery stop on first discover function, that's change field name
-func Discovery(discoveries ...structmap.BehaviorFunc) structmap.BehaviorFunc {
-	return func(field *structmap.FieldPart) error {
+func Discovery(discoveries ...structmap.Behavior) structmap.Behavior {
+	return behavior.New(func(field *structmap.FieldPart) error {
 		currentName := field.Name
 
 		for _, discover := range discoveries {
-			if err := discover(field); err != nil {
+			if err := discover.Do(field); err != nil {
 				return err
 			}
 
@@ -18,10 +21,10 @@ func Discovery(discoveries ...structmap.BehaviorFunc) structmap.BehaviorFunc {
 		}
 
 		return nil
-	}
+	})
 }
 
 // Noop do not change field name
-func Noop(field *structmap.FieldPart) error {
+var Noop = behavior.New(func(field *structmap.FieldPart) error {
 	return nil
-}
+})

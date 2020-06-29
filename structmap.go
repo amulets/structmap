@@ -18,12 +18,14 @@ type (
 		IsEmbedded bool
 	}
 
-	// BehaviorFunc that deals with the behavior of the field
-	BehaviorFunc func(*FieldPart) error
+	// Behavior implementation
+	Behavior interface {
+		Do(*FieldPart) error
+	}
 
 	// StructMap is a structmap
 	StructMap struct {
-		behaviors []BehaviorFunc
+		behaviors []Behavior
 	}
 )
 
@@ -33,7 +35,7 @@ func New() *StructMap {
 }
 
 // AddBehavior a new behavior logic
-func (sm *StructMap) AddBehavior(behavior BehaviorFunc) {
+func (sm *StructMap) AddBehavior(behavior Behavior) {
 	sm.behaviors = append(sm.behaviors, behavior)
 }
 
@@ -69,7 +71,7 @@ func (sm *StructMap) Decode(from map[string]interface{}, to interface{}) (err er
 
 		// run behaviors
 		for i, behavior := range sm.behaviors {
-			if err := behavior(fp); err != nil {
+			if err := behavior.Do(fp); err != nil {
 				return err
 			}
 
