@@ -8,7 +8,7 @@ import (
 func toFloat(source reflect.Type, value reflect.Value) (result interface{}, err error) {
 	switch toKind(value.Type()) {
 	case reflect.Float32:
-		result = value.Float()
+		result = value.Interface()
 	case reflect.Int:
 		result = float64(value.Int())
 	case reflect.Uint:

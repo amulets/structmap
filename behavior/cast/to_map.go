@@ -29,9 +29,7 @@ func toMap(source reflect.Type, value reflect.Value) (result interface{}, err er
 
 		if mapKeyElem, err = toType(source.Key(), mapKeyElem); err != nil {
 			switch err {
-			case errEmptyValue:
-				fallthrough
-			case errNoCoveredType:
+			case errEmptyValue, errNoCoveredType:
 				err = nil
 			default:
 				return
@@ -40,9 +38,7 @@ func toMap(source reflect.Type, value reflect.Value) (result interface{}, err er
 
 		if mapValueElem, err = toType(source.Elem(), mapValueElem); err != nil {
 			switch err {
-			case errEmptyValue:
-				fallthrough
-			case errNoCoveredType:
+			case errEmptyValue, errNoCoveredType:
 				err = nil
 			default:
 				return

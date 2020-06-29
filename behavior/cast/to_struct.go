@@ -19,6 +19,7 @@ func init() {
 func toStruct(source reflect.Type, value reflect.Value) (result interface{}, err error) {
 	// Is the same type
 	if source == value.Type() {
+		result = value.Interface()
 		return
 	}
 

@@ -63,12 +63,10 @@ func ToType(field *structmap.FieldPart) error {
 }
 
 func toType(from reflect.Type, value reflect.Value) (to reflect.Value, err error) {
-	switch value.Kind() {
-	case reflect.Ptr:
-		fallthrough
-	case reflect.Interface:
-		value = internal.Value(value, true)
-	}
+	// set received value to return
+	to = value
+
+	value = internal.Value(value, true)
 
 	if !value.IsValid() {
 		// Do not has a value
@@ -78,10 +76,7 @@ func toType(from reflect.Type, value reflect.Value) (to reflect.Value, err error
 	}
 
 	// check if type is a ptr and get real type
-	fromType := from
-	if from.Kind() == reflect.Ptr {
-		fromType = internal.Type(from)
-	}
+	fromType := internal.Type(from)
 
 	convert, ok := convertTo[toKind(fromType)]
 	if !ok {
@@ -99,10 +94,10 @@ func toType(from reflect.Type, value reflect.Value) (to reflect.Value, err error
 		}
 
 		if from.Kind() == reflect.Ptr {
-			pv := reflect.New(from)
+			pv := reflect.New(from.Elem())
 			internal.SetValue(pv.Elem(), to)
 
-			to = pv.Elem()
+			to = pv
 		}
 	}
 

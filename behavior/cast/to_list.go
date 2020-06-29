@@ -54,9 +54,7 @@ func toList(source reflect.Type, value reflect.Value) (result interface{}, err e
 
 		if itemValue, err = toType(source.Elem(), itemValue); err != nil {
 			switch err {
-			case errEmptyValue:
-				fallthrough
-			case errNoCoveredType:
+			case errEmptyValue, errNoCoveredType:
 				err = nil
 			default:
 				return
