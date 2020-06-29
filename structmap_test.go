@@ -776,3 +776,25 @@ func TestNil(t *testing.T) {
 
 	t.Logf("%+v", s)
 }
+
+func TestCustomType(t *testing.T) {
+	to := new(struct {
+		Duration time.Duration
+		Time     time.Time
+	})
+
+	from := map[string]interface{}{
+		"Duration": 60000000000,
+		"Time":     1588791963946,
+	}
+
+	sm := structmap.New()
+	sm.AddBehavior(name.Noop)
+	sm.AddBehavior(cast.ToType)
+
+	if err := sm.Decode(from, to); err != nil {
+		t.Error(err)
+	}
+
+	t.Logf("%+v", to)
+}
