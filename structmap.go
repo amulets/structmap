@@ -3,6 +3,7 @@ package structmap
 import (
 	"fmt"
 	"reflect"
+	"runtime/debug"
 
 	"github.com/amulets/structmap/internal"
 )
@@ -23,20 +24,25 @@ type (
 		Do(*FieldPart) error
 	}
 
+	// OptionFunc define options
+	OptionFunc func(*StructMap)
+
 	// StructMap is a structmap
 	StructMap struct {
+		debug     bool
 		behaviors []Behavior
 	}
 )
 
 // New instance of StructMap
-func New() *StructMap {
-	return &StructMap{}
-}
+func New(options ...OptionFunc) *StructMap {
+	sm := new(StructMap)
 
-// AddBehavior a new behavior logic
-func (sm *StructMap) AddBehavior(behavior Behavior) {
-	sm.behaviors = append(sm.behaviors, behavior)
+	for _, option := range options {
+		option(sm)
+	}
+
+	return sm
 }
 
 // Decode map to struct
@@ -44,7 +50,12 @@ func (sm *StructMap) Decode(from map[string]interface{}, to interface{}) (err er
 	defer func() {
 		if err == nil {
 			if recovered := recover(); recovered != nil {
-				err = fmt.Errorf("%v", recovered)
+				if sm.debug {
+					// Add stack trace to easy debug
+					err = fmt.Errorf("%v\n%s", recovered, string(debug.Stack()))
+				} else {
+					err = fmt.Errorf("%v", recovered)
+				}
 			}
 		}
 	}()
@@ -95,9 +106,7 @@ func (sm *StructMap) Decode(from map[string]interface{}, to interface{}) (err er
 			value := field.Value
 
 			if field.Value.Kind() == reflect.Ptr && field.IsZero() {
-				pv := reflect.New(fieldType)
-
-				internal.SetValue(field.Value, pv.Elem())
+				internal.SetValue(field.Value, reflect.Zero(fieldType))
 			} else {
 				value = field.Value.Addr()
 			}

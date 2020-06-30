@@ -16,8 +16,7 @@ type Benchmark struct {
 }
 
 func BenchmarkDecode(b *testing.B) {
-	sm := structmap.New()
-	sm.AddBehavior(name.Noop)
+	sm := structmap.New(structmap.WithBehaviors(name.Noop))
 
 	from := map[string]interface{}{
 		"String": "MyString",
@@ -37,9 +36,7 @@ func BenchmarkDecode(b *testing.B) {
 }
 
 func BenchmarkDecodeWithCast(b *testing.B) {
-	sm := structmap.New()
-	sm.AddBehavior(name.Noop)
-	sm.AddBehavior(cast.ToType)
+	sm := structmap.New(structmap.WithBehaviors(name.Noop, cast.ToType))
 
 	from := map[string]interface{}{
 		"String": 2000,
