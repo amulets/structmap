@@ -64,9 +64,7 @@ func TestDecode(t *testing.T) {
 
 	defaultTag := "structmap"
 
-	d := structmap.New()
-	d.AddBehavior(name.FromTag(defaultTag))
-	d.AddBehavior(behavior.New(func(field *structmap.FieldPart) error {
+	defaultValue := behavior.New(func(field *structmap.FieldPart) error {
 		if field.Value != nil {
 			return nil
 		}
@@ -77,11 +75,18 @@ func TestDecode(t *testing.T) {
 		}
 
 		return nil
-	}))
-	d.AddBehavior(flag.Required(defaultTag))
-	d.AddBehavior(cast.ToType)
+	})
 
-	if err := d.Decode(m, s); err != nil {
+	sm := structmap.New(
+		structmap.WithBehaviors(
+			name.FromTag(defaultTag),
+			defaultValue,
+			flag.Required(defaultTag),
+			cast.ToType,
+		),
+	)
+
+	if err := sm.Decode(m, s); err != nil {
 		t.Error(err)
 		t.FailNow()
 	}
@@ -167,8 +172,11 @@ func TestDefaultTypes(t *testing.T) {
 
 	var result DefaultTypes
 
-	sm := structmap.New()
-	sm.AddBehavior(name.FromTag("structmap"))
+	sm := structmap.New(
+		structmap.WithBehaviors(
+			name.FromTag("structmap"),
+		),
+	)
 
 	err := sm.Decode(input, &result)
 	if err != nil {
@@ -232,8 +240,11 @@ func TestFromDefaultTypesToPointer(t *testing.T) {
 
 	var result DefaultTypesPointer
 
-	sm := structmap.New()
-	sm.AddBehavior(name.FromTag("structmap"))
+	sm := structmap.New(
+		structmap.WithBehaviors(
+			name.FromTag("structmap"),
+		),
+	)
 
 	err := sm.Decode(input, &result)
 	if err != nil {
@@ -301,8 +312,11 @@ func TestFromPointerToDefaultTypes(t *testing.T) {
 
 	var result DefaultTypes
 
-	sm := structmap.New()
-	sm.AddBehavior(name.FromTag("structmap"))
+	sm := structmap.New(
+		structmap.WithBehaviors(
+			name.FromTag("structmap"),
+		),
+	)
 
 	err := sm.Decode(input, &result)
 	if err != nil {
@@ -374,8 +388,11 @@ func TestFromPointerToPointer(t *testing.T) {
 
 	var result DefaultTypesPointer
 
-	sm := structmap.New()
-	sm.AddBehavior(name.FromTag("structmap"))
+	sm := structmap.New(
+		structmap.WithBehaviors(
+			name.FromTag("structmap"),
+		),
+	)
 
 	err := sm.Decode(input, &result)
 	if err != nil {
@@ -430,9 +447,12 @@ func TestMapCast(t *testing.T) {
 		},
 	}
 
-	sm := structmap.New()
-	sm.AddBehavior(name.FromTag("structmap"))
-	sm.AddBehavior(cast.ToType)
+	sm := structmap.New(
+		structmap.WithBehaviors(
+			name.FromTag("structmap"),
+			cast.ToType,
+		),
+	)
 
 	err := sm.Decode(m, s)
 	if err != nil {
@@ -456,8 +476,11 @@ func TestName(t *testing.T) {
 		"snake_case": "MySnakeCase",
 	}
 
-	sm := structmap.New()
-	sm.AddBehavior(name.Discovery(name.FromTag("json"), name.FromTag("bson"), name.FromSnake))
+	sm := structmap.New(
+		structmap.WithBehaviors(
+			name.Discovery(name.FromTag("json"), name.FromTag("bson"), name.FromSnake),
+		),
+	)
 
 	err := sm.Decode(m, s)
 	if err != nil {
@@ -478,8 +501,7 @@ func TestNameNoop(t *testing.T) {
 		"ValueB": "valB",
 	}
 
-	sm := structmap.New()
-	sm.AddBehavior(name.Noop)
+	sm := structmap.New(structmap.WithBehaviors(name.Noop))
 
 	err := sm.Decode(m, s)
 	if err != nil {
@@ -498,9 +520,7 @@ func TestStructConvert(t *testing.T) {
 		"Date": 1588791963946,
 	}
 
-	sm := structmap.New()
-	sm.AddBehavior(name.Noop)
-	sm.AddBehavior(cast.ToType)
+	sm := structmap.New(structmap.WithBehaviors(name.Noop, cast.ToType))
 
 	err := sm.Decode(m, s)
 	if err != nil {
@@ -527,9 +547,9 @@ func TestLadies(t *testing.T) {
 		},
 	}
 
-	sm := structmap.New()
-	sm.AddBehavior(name.Noop)
-	sm.AddBehavior(flag.NoEmbedded("structmap"))
+	sm := structmap.New(
+		structmap.WithBehaviors(name.Noop, flag.NoEmbedded("structmap")),
+	)
 
 	if err := sm.Decode(m, s); err != nil {
 		t.Error(err)
@@ -546,8 +566,7 @@ func TestSliceToSlice(t *testing.T) {
 		"Numbers": []int{1, 2, 3},
 	}
 
-	sm := structmap.New()
-	sm.AddBehavior(name.Noop)
+	sm := structmap.New(structmap.WithBehaviors(name.Noop))
 
 	if err := sm.Decode(m, s); err != nil {
 		t.Error(err)
@@ -564,8 +583,7 @@ func TestArrayToArray(t *testing.T) {
 		"Numbers": [3]int{1, 2, 3},
 	}
 
-	sm := structmap.New()
-	sm.AddBehavior(name.Noop)
+	sm := structmap.New(structmap.WithBehaviors(name.Noop))
 
 	if err := sm.Decode(m, s); err != nil {
 		t.Error(err)
@@ -582,9 +600,7 @@ func TestSliceToArrayConverter(t *testing.T) {
 		"Times": []int{1588791963946, 1588791963946, 1588791963946},
 	}
 
-	sm := structmap.New()
-	sm.AddBehavior(name.Noop)
-	sm.AddBehavior(cast.ToType)
+	sm := structmap.New(structmap.WithBehaviors(name.Noop, cast.ToType))
 
 	if err := sm.Decode(m, s); err != nil {
 		t.Error(err)
@@ -601,9 +617,7 @@ func TestSliceToArrayConverterType(t *testing.T) {
 		"Times": []int{1588791963946, 1588791963946, 1588791963946},
 	}
 
-	sm := structmap.New()
-	sm.AddBehavior(name.Noop)
-	sm.AddBehavior(cast.ToType)
+	sm := structmap.New(structmap.WithBehaviors(name.Noop, cast.ToType))
 
 	if err := sm.Decode(m, s); err != nil {
 		t.Error(err)
@@ -639,8 +653,7 @@ func TestSimple(t *testing.T) {
 		"D": nil,
 	}
 
-	sm := structmap.New()
-	sm.AddBehavior(name.Noop)
+	sm := structmap.New(structmap.WithBehaviors(name.Noop))
 
 	if err := sm.Decode(m, s); err != nil {
 		t.Error(err)
@@ -668,9 +681,7 @@ func TestCast(t *testing.T) {
 		"A": "B",
 	}
 
-	sm := structmap.New()
-	sm.AddBehavior(name.Noop)
-	sm.AddBehavior(cast.ToType)
+	sm := structmap.New(structmap.WithBehaviors(name.Noop, cast.ToType))
 
 	err := sm.Decode(m, s)
 	if err != nil {
@@ -699,9 +710,7 @@ func TestCastComplex(t *testing.T) {
 		"A": []**int{i0, nil},
 	}
 
-	sm := structmap.New()
-	sm.AddBehavior(name.Noop)
-	sm.AddBehavior(cast.ToType)
+	sm := structmap.New(structmap.WithBehaviors(name.Noop, cast.ToType))
 
 	err := sm.Decode(m, s)
 	if err != nil {
@@ -720,9 +729,7 @@ func TestCastInterface(t *testing.T) {
 		"A": []interface{}{0},
 	}
 
-	sm := structmap.New()
-	sm.AddBehavior(name.Noop)
-	sm.AddBehavior(cast.ToType)
+	sm := structmap.New(structmap.WithBehaviors(name.Noop, cast.ToType))
 
 	err := sm.Decode(m, s)
 	if err != nil {
@@ -744,9 +751,7 @@ func TestCastMap(t *testing.T) {
 		},
 	}
 
-	sm := structmap.New()
-	sm.AddBehavior(name.Noop)
-	sm.AddBehavior(cast.ToType)
+	sm := structmap.New(structmap.WithBehaviors(name.Noop, cast.ToType))
 
 	err := sm.Decode(m, s)
 	if err != nil {
@@ -767,8 +772,7 @@ func TestNil(t *testing.T) {
 		"A": nil,
 	}
 
-	sm := structmap.New()
-	sm.AddBehavior(name.Noop)
+	sm := structmap.New(structmap.WithBehaviors(name.Noop))
 
 	err := sm.Decode(m, s)
 	if err != nil {
@@ -789,9 +793,13 @@ func TestCustomType(t *testing.T) {
 		"Time":     1588791963946,
 	}
 
-	sm := structmap.New()
-	sm.AddBehavior(name.Noop)
-	sm.AddBehavior(cast.ToType)
+	sm := structmap.New(
+		structmap.WithDebug,
+		structmap.WithBehaviors(
+			name.Noop,
+			cast.ToType,
+		),
+	)
 
 	if err := sm.Decode(from, to); err != nil {
 		t.Error(err)
