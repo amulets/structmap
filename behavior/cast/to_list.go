@@ -7,14 +7,14 @@ import (
 	"github.com/amulets/structmap/internal"
 )
 
-func toList(source reflect.Type, value reflect.Value) (result interface{}, err error) {
-	valueKind := toKind(value.Type())
+func (c *Cast) toList(source reflect.Type, value reflect.Value) (result interface{}, err error) {
+	valueKind := value.Type().Kind()
 
 	switch valueKind {
 	case reflect.Slice:
 	case reflect.Array:
 	default:
-		err = errNoConvertible
+		err = ErrNoConvertible
 		return
 	}
 
@@ -25,11 +25,10 @@ func toList(source reflect.Type, value reflect.Value) (result interface{}, err e
 	}
 
 	var (
-		listType   reflect.Type
-		listValue  reflect.Value
-		sourceKind = toKind(source)
+		listType  reflect.Type
+		listValue reflect.Value
 	)
-	switch sourceKind {
+	switch source.Kind() {
 	case reflect.Slice:
 		listType = reflect.SliceOf(source.Elem())
 		sliceValue := reflect.MakeSlice(listType, 0, 0)
@@ -45,23 +44,23 @@ func toList(source reflect.Type, value reflect.Value) (result interface{}, err e
 		listType = reflect.ArrayOf(source.Len(), source.Elem())
 		listValue = reflect.Indirect(reflect.New(listType))
 	default:
-		err = errNoConvertible
+		err = ErrNoConvertible
 		return
 	}
 
 	for i := 0; i < value.Len(); i++ {
 		itemValue := value.Index(i)
 
-		if itemValue, err = toType(source.Elem(), itemValue); err != nil {
+		if itemValue, err = c.toType(source.Elem(), itemValue); err != nil {
 			switch err {
-			case errEmptyValue, errNoCoveredType:
+			case ErrEmptyValue, ErrNoCoveredType:
 				err = nil
 			default:
 				return
 			}
 		}
 
-		if sourceKind == reflect.Slice {
+		if source.Kind() == reflect.Slice {
 			listValue.Set(reflect.Append(listValue, itemValue))
 		} else {
 			listValue.Index(i).Set(itemValue)

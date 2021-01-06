@@ -83,7 +83,7 @@ func TestToKind(t *testing.T) {
 	for _, value := range values {
 		typeOf := reflect.TypeOf(value.raw)
 
-		if kind := toKind(typeOf); kind != value.kind {
+		if kind := ToKind(typeOf); kind != value.kind {
 			t.Errorf("expected %s; got %s", value.kind, kind)
 		}
 	}

@@ -2,6 +2,7 @@ package structmap_test
 
 import (
 	"fmt"
+	"math/big"
 	"reflect"
 	"testing"
 	"time"
@@ -82,7 +83,7 @@ func TestDecode(t *testing.T) {
 			name.FromTag(defaultTag),
 			defaultValue,
 			flag.Required(defaultTag),
-			cast.ToType,
+			cast.ToType(),
 		),
 	)
 
@@ -450,7 +451,7 @@ func TestMapCast(t *testing.T) {
 	sm := structmap.New(
 		structmap.WithBehaviors(
 			name.FromTag("structmap"),
-			cast.ToType,
+			cast.ToType(),
 		),
 	)
 
@@ -502,25 +503,6 @@ func TestNameNoop(t *testing.T) {
 	}
 
 	sm := structmap.New(structmap.WithBehaviors(name.Noop))
-
-	err := sm.Decode(m, s)
-	if err != nil {
-		t.Error(err)
-	}
-
-	t.Logf("%+v", s)
-}
-
-func TestStructConvert(t *testing.T) {
-	s := &struct {
-		Date time.Time
-	}{}
-
-	m := map[string]interface{}{
-		"Date": 1588791963946,
-	}
-
-	sm := structmap.New(structmap.WithBehaviors(name.Noop, cast.ToType))
 
 	err := sm.Decode(m, s)
 	if err != nil {
@@ -600,7 +582,7 @@ func TestSliceToArrayConverter(t *testing.T) {
 		"Times": []int{1588791963946, 1588791963946, 1588791963946},
 	}
 
-	sm := structmap.New(structmap.WithBehaviors(name.Noop, cast.ToType))
+	sm := structmap.New(structmap.WithBehaviors(name.Noop, cast.ToType()))
 
 	if err := sm.Decode(m, s); err != nil {
 		t.Error(err)
@@ -617,7 +599,31 @@ func TestSliceToArrayConverterType(t *testing.T) {
 		"Times": []int{1588791963946, 1588791963946, 1588791963946},
 	}
 
-	sm := structmap.New(structmap.WithBehaviors(name.Noop, cast.ToType))
+	castTime := cast.Type(time.Time{}, func(source reflect.Type, value reflect.Value) (result interface{}, err error) {
+		switch cast.ToKind(value.Type()) {
+		case reflect.Int:
+			result = time.Unix(0, value.Int()*int64(time.Millisecond))
+		case reflect.Float32:
+			result = time.Unix(0, int64(value.Float())*int64(time.Millisecond))
+		case reflect.String:
+			result, err = time.Parse(time.RFC3339, value.String())
+		default:
+			err = cast.ErrNoConvertible
+		}
+
+		return
+	})
+
+	sm := structmap.New(
+		structmap.WithBehaviors(
+			name.Noop,
+			cast.ToType(
+				cast.WithTypes(
+					castTime,
+				),
+			),
+		),
+	)
 
 	if err := sm.Decode(m, s); err != nil {
 		t.Error(err)
@@ -681,7 +687,7 @@ func TestCast(t *testing.T) {
 		"A": "B",
 	}
 
-	sm := structmap.New(structmap.WithBehaviors(name.Noop, cast.ToType))
+	sm := structmap.New(structmap.WithBehaviors(name.Noop, cast.ToType()))
 
 	err := sm.Decode(m, s)
 	if err != nil {
@@ -710,7 +716,7 @@ func TestCastComplex(t *testing.T) {
 		"A": []**int{i0, nil},
 	}
 
-	sm := structmap.New(structmap.WithBehaviors(name.Noop, cast.ToType))
+	sm := structmap.New(structmap.WithBehaviors(name.Noop, cast.ToType()))
 
 	err := sm.Decode(m, s)
 	if err != nil {
@@ -729,7 +735,7 @@ func TestCastInterface(t *testing.T) {
 		"A": []interface{}{0},
 	}
 
-	sm := structmap.New(structmap.WithBehaviors(name.Noop, cast.ToType))
+	sm := structmap.New(structmap.WithBehaviors(name.Noop, cast.ToType()))
 
 	err := sm.Decode(m, s)
 	if err != nil {
@@ -751,7 +757,7 @@ func TestCastMap(t *testing.T) {
 		},
 	}
 
-	sm := structmap.New(structmap.WithBehaviors(name.Noop, cast.ToType))
+	sm := structmap.New(structmap.WithBehaviors(name.Noop, cast.ToType()))
 
 	err := sm.Decode(m, s)
 	if err != nil {
@@ -782,28 +788,74 @@ func TestNil(t *testing.T) {
 	t.Logf("%+v", s)
 }
 
-func TestCustomType(t *testing.T) {
-	to := new(struct {
-		Duration time.Duration
-		Time     time.Time
-	})
+type Data struct {
+	Name string
+	Age  int
+}
 
-	from := map[string]interface{}{
-		"Duration": 60000000000,
-		"Time":     1588791963946,
+func TestOverride(t *testing.T) {
+	s := &Data{
+		Name: "a",
+		Age:  20,
 	}
 
-	sm := structmap.New(
-		structmap.WithDebug,
-		structmap.WithBehaviors(
-			name.Noop,
-			cast.ToType,
-		),
-	)
+	m := map[string]interface{}{
+		"Name": "b",
+	}
 
-	if err := sm.Decode(from, to); err != nil {
+	sm := structmap.New(structmap.WithBehaviors(name.Noop))
+
+	err := sm.Decode(m, s)
+	if err != nil {
 		t.Error(err)
 	}
 
-	t.Logf("%+v", to)
+	t.Logf("%+v", s)
+}
+
+func TestIntToBigInt(t *testing.T) {
+	s := &struct {
+		Number           big.Int
+		NumberFromString big.Int
+	}{}
+
+	m := map[string]interface{}{
+		"Number":           1000000,
+		"NumberFromString": "9000000",
+	}
+
+	sm := structmap.New(
+		structmap.WithBehaviors(
+			name.Noop,
+			cast.ToType(
+				cast.WithTypes(
+					cast.Type(big.Int{}, func(source reflect.Type, value reflect.Value) (result interface{}, err error) {
+						switch cast.ToKind(value.Type()) {
+						case reflect.String:
+							bigInt := big.NewInt(0)
+
+							if len(value.String()) > 0 {
+								err = bigInt.UnmarshalText([]byte(value.String()))
+							}
+
+							result = *bigInt
+						case reflect.Int:
+							result = *big.NewInt(value.Int())
+						default:
+							err = cast.ErrNoConvertible
+						}
+
+						return
+					}),
+				),
+			),
+		),
+	)
+
+	err := sm.Decode(m, s)
+	if err != nil {
+		t.Error(err)
+	}
+
+	t.Logf("%+v", s)
 }

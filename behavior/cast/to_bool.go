@@ -5,8 +5,8 @@ import (
 	"strconv"
 )
 
-func toBool(source reflect.Type, value reflect.Value) (result interface{}, err error) {
-	switch toKind(value.Type()) {
+func (c *Cast) toBool(source reflect.Type, value reflect.Value) (result interface{}, err error) {
+	switch ToKind(value.Type()) {
 	case reflect.Bool:
 		result = value.Bool()
 	case reflect.Int:
@@ -25,7 +25,11 @@ func toBool(source reflect.Type, value reflect.Value) (result interface{}, err e
 			result = false
 		}
 	default:
-		err = errNoConvertible
+		if convert, ok := c.convertToType[source]; ok {
+			return convert(source, value)
+		}
+
+		err = ErrNoConvertible
 	}
 
 	return

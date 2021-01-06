@@ -2,8 +2,8 @@ package cast
 
 import "reflect"
 
-// returns the toKind value and not ptr
-func toKind(value reflect.Type) reflect.Kind {
+// ToKind returns the kind of value
+func ToKind(value reflect.Type) reflect.Kind {
 	kind := value.Kind()
 
 	switch {
