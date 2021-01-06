@@ -5,8 +5,8 @@ import (
 	"strconv"
 )
 
-func toString(source reflect.Type, value reflect.Value) (result interface{}, err error) {
-	switch toKind(value.Type()) {
+func (c *Cast) toString(source reflect.Type, value reflect.Value) (result interface{}, err error) {
+	switch ToKind(value.Type()) {
 	case reflect.String:
 		result = value.String()
 	case reflect.Bool:
@@ -22,7 +22,11 @@ func toString(source reflect.Type, value reflect.Value) (result interface{}, err
 	case reflect.Float32:
 		result = strconv.FormatFloat(value.Float(), 'f', -1, value.Type().Bits())
 	default:
-		err = errNoConvertible
+		if convert, ok := c.convertToType[source]; ok {
+			return convert(source, value)
+		}
+
+		err = ErrNoConvertible
 	}
 
 	return

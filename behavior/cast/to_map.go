@@ -6,9 +6,9 @@ import (
 	"github.com/amulets/structmap/internal"
 )
 
-func toMap(source reflect.Type, value reflect.Value) (result interface{}, err error) {
-	if toKind(value.Type()) != reflect.Map {
-		err = errNoConvertible
+func (c *Cast) toMap(source reflect.Type, value reflect.Value) (result interface{}, err error) {
+	if value.Type().Kind() != reflect.Map {
+		err = ErrNoConvertible
 		return
 	}
 
@@ -27,18 +27,18 @@ func toMap(source reflect.Type, value reflect.Value) (result interface{}, err er
 		mapKeyElem := mapIterator.Key()
 		mapValueElem := mapIterator.Value()
 
-		if mapKeyElem, err = toType(source.Key(), mapKeyElem); err != nil {
+		if mapKeyElem, err = c.toType(source.Key(), mapKeyElem); err != nil {
 			switch err {
-			case errEmptyValue, errNoCoveredType:
+			case ErrEmptyValue, ErrNoCoveredType:
 				err = nil
 			default:
 				return
 			}
 		}
 
-		if mapValueElem, err = toType(source.Elem(), mapValueElem); err != nil {
+		if mapValueElem, err = c.toType(source.Elem(), mapValueElem); err != nil {
 			switch err {
-			case errEmptyValue, errNoCoveredType:
+			case ErrEmptyValue, ErrNoCoveredType:
 				err = nil
 			default:
 				return

@@ -5,8 +5,8 @@ import (
 	"strconv"
 )
 
-func toFloat(source reflect.Type, value reflect.Value) (result interface{}, err error) {
-	switch toKind(value.Type()) {
+func (c *Cast) toFloat(source reflect.Type, value reflect.Value) (result interface{}, err error) {
+	switch ToKind(value.Type()) {
 	case reflect.Float32:
 		result = value.Interface()
 	case reflect.Int:
@@ -26,7 +26,11 @@ func toFloat(source reflect.Type, value reflect.Value) (result interface{}, err 
 			result = f
 		}
 	default:
-		err = errNoConvertible
+		if convert, ok := c.convertToType[source]; ok {
+			return convert(source, value)
+		}
+
+		err = ErrNoConvertible
 	}
 
 	return

@@ -6,8 +6,8 @@ import (
 	"strconv"
 )
 
-func toUint(source reflect.Type, value reflect.Value) (result interface{}, err error) {
-	switch toKind(value.Type()) {
+func (c *Cast) toUint(source reflect.Type, value reflect.Value) (result interface{}, err error) {
+	switch ToKind(value.Type()) {
 	case reflect.Uint:
 		result = value.Uint()
 	case reflect.Int:
@@ -39,7 +39,11 @@ func toUint(source reflect.Type, value reflect.Value) (result interface{}, err e
 			result = u
 		}
 	default:
-		err = errNoConvertible
+		if convert, ok := c.convertToType[source]; ok {
+			return convert(source, value)
+		}
+
+		err = ErrNoConvertible
 	}
 
 	return

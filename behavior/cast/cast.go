@@ -1,56 +1,67 @@
 package cast
 
 import (
-	"errors"
 	"fmt"
 	"reflect"
 
 	"github.com/amulets/structmap"
-	"github.com/amulets/structmap/behavior"
-	"github.com/amulets/structmap/internal"
 )
 
-var (
-	errEmptyValue    = errors.New("empty value")
-	errNoCoveredType = errors.New("no covered type")
-	errNoConvertible = errors.New("non-convertible type")
-)
+type (
+	// ConverterFunc has logic on how to convert
+	ConverterFunc func(source reflect.Type, value reflect.Value) (result interface{}, err error)
 
-type kindConvert = map[reflect.Kind]func(source reflect.Type, value reflect.Value) (result interface{}, err error)
+	// OptionFunc define options
+	OptionFunc func(*Cast)
 
-// Covered types to convert
-var convertTo kindConvert
-
-func init() {
-	convertTo = kindConvert{
-		reflect.String:    toString,
-		reflect.Int:       toInt,
-		reflect.Uint:      toUint,
-		reflect.Bool:      toBool,
-		reflect.Float32:   toFloat,
-		reflect.Map:       toMap,
-		reflect.Struct:    toStruct,
-		reflect.Slice:     toList,
-		reflect.Array:     toList,
-		reflect.Interface: toInterface,
+	// Cast is a cast
+	Cast struct {
+		convertToKind map[reflect.Kind]ConverterFunc
+		convertToType map[reflect.Type]ConverterFunc
 	}
-}
+)
 
 // ToType cast value to field type value
-var ToType = behavior.New(func(field *structmap.FieldPart) error {
+func ToType(options ...OptionFunc) *Cast {
+	c := new(Cast)
+
+	c.convertToKind = map[reflect.Kind]ConverterFunc{
+		reflect.String:    c.toString,
+		reflect.Int:       c.toInt,
+		reflect.Uint:      c.toUint,
+		reflect.Bool:      c.toBool,
+		reflect.Float32:   c.toFloat,
+		reflect.Map:       c.toMap,
+		reflect.Struct:    c.toStruct,
+		reflect.Slice:     c.toList,
+		reflect.Array:     c.toList,
+		reflect.Interface: c.toInterface,
+	}
+
+	c.convertToType = map[reflect.Type]ConverterFunc{}
+
+	for _, option := range options {
+		option(c)
+	}
+
+	return c
+}
+
+// Do has a ToType logic
+func (c *Cast) Do(field *structmap.FieldPart) error {
 	//Field value cannot is a pointer
 	value := reflect.ValueOf(field.Value)
 
-	toValue, err := toType(field.Type, value)
+	toValue, err := c.toType(field.Type, value)
 	if err != nil {
 		switch err {
-		case errEmptyValue:
+		case ErrEmptyValue:
 			fallthrough
-		case errNoCoveredType:
+		case ErrNoCoveredType:
 			// Do not have a coverter to this type
 			return nil
-		case errNoConvertible:
-			err = fmt.Errorf("'%s' expected type '%s', got non-convertible type '%s'", field.Name, field.Type, value.Type())
+		case ErrNoConvertible:
+			err = fmt.Errorf("expected type '%s', got non-convertible type '%s'", field.Type, value.Type())
 			fallthrough
 		default:
 			err = fmt.Errorf("%s: %s", field.Name, err)
@@ -61,46 +72,4 @@ var ToType = behavior.New(func(field *structmap.FieldPart) error {
 	field.Value = toValue.Interface()
 
 	return nil
-})
-
-func toType(from reflect.Type, value reflect.Value) (to reflect.Value, err error) {
-	// set received value to return
-	to = value
-
-	value = internal.Value(value, true)
-
-	if !value.IsValid() {
-		// Do not has a value
-		to = reflect.Zero(from)
-		err = errEmptyValue
-		return
-	}
-
-	// check if type is a ptr and get real type
-	fromType := internal.Type(from)
-
-	convert, ok := convertTo[toKind(fromType)]
-	if !ok {
-		err = errNoCoveredType
-		return
-	}
-
-	var rawValue interface{}
-	if rawValue, err = convert(fromType, value); err == nil {
-		to = reflect.ValueOf(rawValue)
-
-		// convert its type ex: int32 to int
-		if to.Type().ConvertibleTo(fromType) {
-			to = to.Convert(fromType)
-		}
-
-		if from.Kind() == reflect.Ptr {
-			pv := reflect.New(from.Elem())
-			internal.SetValue(pv.Elem(), to)
-
-			to = pv
-		}
-	}
-
-	return
 }
